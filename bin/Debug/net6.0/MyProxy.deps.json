@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "MyProxy/1.0.0": {
+        "dependencies": {
+          "MyRefs": "1.0.0"
+        },
+        "runtime": {
+          "MyProxy.dll": {}
+        }
+      },
+      "MyRefs/1.0.0": {
+        "runtime": {
+          "MyRefs.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "MyProxy/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MyRefs/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
