@@ -8,12 +8,46 @@ namespace MyProxy
     public static class DynamicExtensions
     {
 
-        public static bool Call<T>(this Task<T> r)
+        public static I InjectCode<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after, params object[] ctorArgs) where T : class , I 
         {
-            return true;
+#pragma warning disable IDE004 // keep the cast to use correct implementations of interface methods
+            return (I)@object.InjectCode(before, after, ctorArgs);
+#pragma warning restore IDE004
         }
 
-        public static I CreateObjectWithProxy<T,I>(BeforeMethodCall before, AfterMethodCall after,params object[] ctorArgs) where T : I
+        public static T InjectCode<T>(this T @object, BeforeMethodCall before, AfterMethodCall after, params object[] ctorArgs) where T : class
+        {
+            ConstructorInfo? ctor = MyRefs.Extensions.ReflectionExtension.GetCtorByParamsType<T>(ctorArgs.Select(s => s.GetType()).ToArray());
+            if (ctor == null)
+                throw new MyRefs.Exceptions.ContructorNotFoundException(typeof(T), $"The type {typeof(T).Name} do not have a constructor like {typeof(T).Name}({String.Join(",", ctorArgs.Select(s => s.GetType().Name).ToArray())})");
+
+#pragma warning disable
+
+            T o = default(T);
+
+            try
+            {
+                o = (T)Activator.CreateInstance(new TypeGenerator(before, after).GenerateTypeFrom(typeof(T)), ctorArgs);
+            }
+            catch (Exception ex)
+            {
+                throw new FailCastException(typeof(T), typeof(T), ex.Message);
+            }
+
+            o.GetType().GetField("_delegate_before_call", BindingFlags.Public | BindingFlags.Instance)
+             .SetValue(o, before);
+
+            o.GetType().GetField("_delegate_after_call", BindingFlags.Public | BindingFlags.Instance)
+            .SetValue(o, after);
+
+            @object.m_Copy(o);
+
+#pragma warning restore;
+
+            return o;
+        }
+
+        public static I CreateObjectWithProxy<T,I>(BeforeMethodCall before, AfterMethodCall after,params object[] ctorArgs) where T : I 
         {
             if (!typeof(I).IsInterface)
                 throw new InvalidTypeException(typeof(I));
@@ -30,9 +64,9 @@ namespace MyProxy
             {
                 o = (I)Activator.CreateInstance(new TypeGenerator(before, after).GenerateTypeFrom(typeof(T), typeof(I)), ctorArgs);
             }
-            catch
+            catch(Exception ex)
             {
-                throw new FailCastException(typeof(T), typeof(I));
+                throw new FailCastException(typeof(T), typeof(I), ex.Message);
             }
 
             o.GetType().GetField("_delegate_before_call", BindingFlags.Public | BindingFlags.Instance)
@@ -45,9 +79,9 @@ namespace MyProxy
             return o;
         }
 
-        public static I AddProxy<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after) where T : I
+        public static I AddProxy<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after, params object[] ctorArgs) where T : I
         {
-            I o = CreateObjectWithProxy<T,I>(before, after);
+            I o = CreateObjectWithProxy<T,I>(before, after, ctorArgs);
 
             @object.m_Copy(o);
 

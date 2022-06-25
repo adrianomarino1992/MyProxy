@@ -4,7 +4,7 @@ using System.Dynamic;
 
 namespace MyProxy.Objects
 {
-    public abstract class DymObject : DynamicObject
+    public  class DymObject : DynamicObject
     {
         private List<object> _aggregateList;
 
@@ -21,7 +21,7 @@ namespace MyProxy.Objects
                 if (!_aggregateList.Any(s => s.GetType() == o.GetType()))
                     _aggregateList.Add(o);
             }
-
+            
         }
 
         public override bool TryGetMember(GetMemberBinder binder, out object? result)

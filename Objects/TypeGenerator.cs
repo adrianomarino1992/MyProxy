@@ -8,22 +8,7 @@ namespace MyProxy.Objects
     public delegate object AfterMethodCall(object sender, object methodResult);
     public class TypeGenerator
     {
-        private static Dictionary<Type, Type> _runtimeTypes;
-
-        static TypeGenerator()
-        {
-            _runtimeTypes = new Dictionary<Type, Type>();
-        }
-
-        public static Type? GetType(Type target)
-        {
-            return _runtimeTypes.TryGetValue(target, out Type? type) ? type : null;
-        }
-
-        private static void m_AddType(Type target, Type @new)
-        {
-            _runtimeTypes.Add(target, @new);
-        }
+        
 
         public BeforeMethodCall? BeforeMethodCallHandler;
 
@@ -43,9 +28,14 @@ namespace MyProxy.Objects
             AfterMethodCallHandler = after;
         }
 
-        public Type? GenerateTypeFrom(Type context, Type toCopy)
+        public Type? GenerateTypeFrom(Type context, Type? toCopy = null)
         {
-            Type? tp = GetType(toCopy);
+            bool inject = toCopy == null;
+
+            toCopy = toCopy ?? context;
+
+
+            Type ? tp = ProxyContainer.Container.GetType(toCopy);
 
             if (tp != null)
             {
@@ -63,14 +53,22 @@ namespace MyProxy.Objects
 
             SetProxy(tb);
 
+            List<MethodInfo> mthImplementeds = new List<MethodInfo>();                      
+
+            if(inject)
+                mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, mthImplementeds));
+
             foreach (Type @interface in interfaces)
             {
-                GenerateMethodsFrom(tb, context, @interface, true);
+                mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, new List<MethodInfo>(), @interface, true));
             }
+
+            if(!inject)
+                GenerateMethodsFrom(tb, context, mthImplementeds);
 
             tp = tb.CreateType();
 
-            m_AddType(toCopy, tp);
+            ProxyContainer.Container.AddType(toCopy, tp);
 
             return tp;
         }
@@ -84,20 +82,39 @@ namespace MyProxy.Objects
             _refResult = typeBuilder.DefineField("_refResult", typeof(object), FieldAttributes.Public);
         }
 
-        public void GenerateMethodsFrom(TypeBuilder typeBuilder, Type context, Type toCopy, bool @override = false)
+        public List<MethodInfo> GenerateMethodsFrom(TypeBuilder typeBuilder, Type context, List<MethodInfo> mthIgnore, Type? toCopy = null, bool @override = false)
         {
+            toCopy = toCopy ?? context;
 
+            List<MethodInfo> @news = new List<MethodInfo>();
 
             foreach (MethodInfo info in toCopy.GetMethods())
             {
+                if (mthIgnore.Exists(a =>
+                {
+                    bool sameName = a.Name == info.Name;
+                    List<Type> aTypes = a.GetParameters().Select(s => s.ParameterType).ToList();
+                    List<Type> infoTypes = info.GetParameters().Select(s => s.ParameterType).ToList();
 
-                MethodBuilder mb = typeBuilder.DefineMethod(info.Name,
-                    MethodAttributes.Public
-                    | MethodAttributes.HideBySig
-                    | MethodAttributes.NewSlot
-                    | MethodAttributes.Virtual
-                    | MethodAttributes.Final,
-                    CallingConventions.HasThis, info.ReturnType, info.GetParameters().Select(s => s.ParameterType).ToArray());
+                    bool sameTypes = aTypes.All(s => infoTypes.Contains(s)) && aTypes.Count == infoTypes.Count;
+
+                    return sameName && sameTypes;
+                  
+                }))
+                {
+                    continue;
+                }
+
+                news.Add(info);
+
+                MethodAttributes mtAttr = ((info.Attributes & MethodAttributes.Public) > 0 ? MethodAttributes.Public : MethodAttributes.Private) | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual | MethodAttributes.Final;
+
+                if(!@override)
+                {
+                    mtAttr = ((info.Attributes & MethodAttributes.Public) > 0 ? MethodAttributes.Public : MethodAttributes.Private) | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Final;
+                }
+
+                MethodBuilder mb = typeBuilder.DefineMethod(info.Name, mtAttr, CallingConventions.HasThis, info.ReturnType, info.GetParameters().Select(s => s.ParameterType).ToArray());
 
                 ILGenerator il = mb.GetILGenerator();
 
@@ -183,11 +200,12 @@ namespace MyProxy.Objects
                         );
                 }
 
-
-                typeBuilder.DefineMethodOverride(mb, info);
+                if(@override)
+                    typeBuilder.DefineMethodOverride(mb, info);
 
             }
 
+            return news;
 
         }
 

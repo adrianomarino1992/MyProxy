@@ -10,11 +10,19 @@ namespace MyProxy.Objects
         public AssemblyBuilder AssemblyBuilder => _assemblyBuilder;
 
         private ModuleBuilder _moduleBuilder;
-
-        public ModuleBuilder ModuleBuilder => _moduleBuilder;
-
-        public static List<MethodInfo> Methods = new List<MethodInfo>();
                 
+
+        private Dictionary<Type, Type> _runtimeTypes;              
+
+        public Type? GetType(Type target)
+        {
+            return _runtimeTypes.TryGetValue(target, out Type? type) ? type : null;
+        }
+
+        internal void AddType(Type target, Type @new)
+        {
+            _runtimeTypes.Add(target, @new);
+        }
 
         private static ProxyContainer? _container;
         public static ProxyContainer Container
@@ -27,13 +35,16 @@ namespace MyProxy.Objects
                 return _container;
             }
         }
+        public ModuleBuilder ModuleBuilder => _moduleBuilder;
 
+        public static List<MethodInfo> Methods = new List<MethodInfo>();
 
         private ProxyContainer()
         {
             AssemblyName aName = new AssemblyName("myProxyDymAssembly");
             _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);
             _moduleBuilder = _assemblyBuilder.DefineDynamicModule("myProxyDymModule");
+            _runtimeTypes = new Dictionary<Type, Type>();
         }
     }
 
