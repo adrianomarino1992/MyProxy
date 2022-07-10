@@ -1,31 +1,31 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using MyProxy.Objects.Delegates;
 
 namespace MyProxy.Objects
-{
-    public delegate void BeforeMethodCall(object sender, string name);
-
-    public delegate object AfterMethodCall(object sender, object methodResult);
+{   
+   
     public class TypeGenerator
-    {
-        
+    {       
 
         public BeforeMethodCall? BeforeMethodCallHandler;
-
+        public ReplaceMethodCall? ReplaceMethodCallHandler;
         public AfterMethodCall? AfterMethodCallHandler;
 
 
-        private FieldBuilder _fieldBuilder;
-        private FieldBuilder _afterfieldBuilder;
+        private FieldBuilder _beforeMethodCall;
+        private FieldBuilder _replaceMethodCall;
+        private FieldBuilder _afterMethodCall;
         private FieldBuilder _refResult;
 
 #pragma warning disable
-        public TypeGenerator(BeforeMethodCall? before, AfterMethodCall? after)
+        public TypeGenerator(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace = null)
         {
 #pragma warning restore
 
             BeforeMethodCallHandler = before;
             AfterMethodCallHandler = after;
+            ReplaceMethodCallHandler = replace;
         }
 
         public Type? GenerateTypeFrom(Type context, Type? toCopy = null)
@@ -75,9 +75,11 @@ namespace MyProxy.Objects
 
         public void SetProxy(TypeBuilder typeBuilder)
         {
-            _fieldBuilder = typeBuilder.DefineField($"_delegate_before_call", typeof(BeforeMethodCall), FieldAttributes.Public);
+            _beforeMethodCall = typeBuilder.DefineField($"_delegate_before_call", typeof(BeforeMethodCall), FieldAttributes.Public);
 
-            _afterfieldBuilder = typeBuilder.DefineField("_delegate_after_call", typeof(AfterMethodCall), FieldAttributes.Public);
+            _replaceMethodCall = typeBuilder.DefineField($"_delegate_replace_call", typeof(ReplaceMethodCall), FieldAttributes.Public);
+
+            _afterMethodCall = typeBuilder.DefineField("_delegate_after_call", typeof(AfterMethodCall), FieldAttributes.Public);
 
             _refResult = typeBuilder.DefineField("_refResult", typeof(object), FieldAttributes.Public);
         }
@@ -123,50 +125,138 @@ namespace MyProxy.Objects
 
                 if (BeforeMethodCallHandler != null)
                 {
-                    il.Emit(OpCodes.Ldarg_0);
+                    LocalBuilder arr = il.DeclareLocal(typeof(object[]));
+                    il.Emit(OpCodes.Ldc_I4, numArgs);
+                    il.Emit(OpCodes.Newarr, typeof(object));
+                    il.Emit(OpCodes.Stloc, arr);
 
-                    il.Emit(OpCodes.Ldfld, _fieldBuilder);
+
+                    if (numArgs > 0)
+                    {
+                        for (int i = 0; i < numArgs; i++)
+                        {
+                            il.Emit(OpCodes.Ldloc, arr);
+                            il.Emit(OpCodes.Ldc_I4, i);
+                            il.Emit(OpCodes.Ldarg, i + 1);
+                            if (info.GetParameters()[i].ParameterType.IsValueType)
+                                il.Emit(OpCodes.Box, info.GetParameters()[i].ParameterType);
+                            il.Emit(OpCodes.Stelem, typeof(object));
+
+                        }
+
+                    }
+
+                    LocalBuilder bfArg = il.DeclareLocal(typeof(BeforeMethodCallArgs));
+
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldstr, info.Name);
+                    il.Emit(OpCodes.Ldloc, arr);
+                    il.Emit(OpCodes.Newobj, typeof(BeforeMethodCallArgs).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object[])})!);
+                    
+                    il.Emit(OpCodes.Stloc, bfArg);
+
+                    il.Emit(OpCodes.Ldarg_0);                    
+                    il.Emit(OpCodes.Ldfld, _beforeMethodCall);
+
 
                     MethodInfo? beforeCall = typeof(BeforeMethodCall).GetMethod("Invoke");
                     if (beforeCall == null)
                         goto METHOD;
 
-                    var parameters = beforeCall.GetParameters();
 
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldstr, info.Name);
-
+                    il.Emit(OpCodes.Ldloc, bfArg);
+                    
                     il.Emit(OpCodes.Callvirt, beforeCall);
                 }
 
             METHOD:
                 {
-                    if (numArgs > 0)
+
+                    if (ReplaceMethodCallHandler != null)
                     {
-                        for (int i = 0; i <= numArgs; i++)
+                        LocalBuilder arr = il.DeclareLocal(typeof(object[]));
+                        il.Emit(OpCodes.Ldc_I4, numArgs);
+                        il.Emit(OpCodes.Newarr, typeof(object));
+                        il.Emit(OpCodes.Stloc, arr);
+
+
+                        if (numArgs > 0)
                         {
-                            il.Emit(OpCodes.Ldarg_S, i);
+                            for (int i = 0; i < numArgs; i++)
+                            {
+                                il.Emit(OpCodes.Ldloc, arr);
+                                il.Emit(OpCodes.Ldc_I4, i);
+                                il.Emit(OpCodes.Ldarg, i + 1);
+                                if (info.GetParameters()[i].ParameterType.IsValueType)
+                                    il.Emit(OpCodes.Box, info.GetParameters()[i].ParameterType);
+                                il.Emit(OpCodes.Stelem, typeof(object));
+
+                            }
+
                         }
+
+                        LocalBuilder bfArg = il.DeclareLocal(typeof(ReplaceMethodCall));
+
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldstr, info.Name);
+                        il.Emit(OpCodes.Ldloc, arr);
+                        il.Emit(OpCodes.Newobj, typeof(ReplaceMethodCallArgs).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object[]) })!);
+
+                        il.Emit(OpCodes.Stloc, bfArg);
+
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldfld, _replaceMethodCall);
+
+
+                        MethodInfo? replaceCall = typeof(ReplaceMethodCall).GetMethod("Invoke");
+                        if (replaceCall == null)
+                            goto METHOD;
+
+
+                        il.Emit(OpCodes.Ldloc, bfArg);
+
+                        il.Emit(OpCodes.Callvirt, replaceCall);
                     }
-
-                    MethodInfo? md = context.GetMethod(info.Name, info.GetParameters().Select(s => s.ParameterType).ToArray());
-
-                    if (md == null || info.ReturnType != md.ReturnType)
+                    else
                     {
-                        throw new Exceptions.MethodNotFoundException(context, info.Name, info.GetParameters().Select(s => s.ParameterType).ToArray(), info.ReturnType);
 
+                        if (numArgs > 0)
+                        {
+                            for (int i = 0; i <= numArgs; i++)
+                            {
+                                il.Emit(OpCodes.Ldarg_S, i);
+                            }
+                        }
+
+                        MethodInfo? md = context.GetMethod(info.Name, info.GetParameters().Select(s => s.ParameterType).ToArray());
+
+                        if (md == null || info.ReturnType != md.ReturnType)
+                        {
+                            throw new Exceptions.MethodNotFoundException(context, info.Name, info.GetParameters().Select(s => s.ParameterType).ToArray(), info.ReturnType);
+
+                        }
+
+                        il.Emit(OpCodes.Call, md);
                     }
-
-                    il.Emit(OpCodes.Call, md);
                 }
 
                 if (AfterMethodCallHandler != null)
                 {
 
-                    il.Emit(OpCodes.Starg, 1);
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldarga, 1);
-                    il.Emit(OpCodes.Stfld, _refResult);
+                    LocalBuilder reArg = il.DeclareLocal(typeof(object));
+
+                    il.Emit(OpCodes.Stloc, reArg);
+
+                    il.Emit(OpCodes.Ldarg_0);                    
+                    il.Emit(OpCodes.Ldstr, info.Name);
+                    il.Emit(OpCodes.Ldloc, reArg);
+
+                    LocalBuilder afArg = il.DeclareLocal(typeof(AfterMethodCallArgs));
+
+                    il.Emit(OpCodes.Newobj, typeof(AfterMethodCallArgs).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object) })!);
+
+                    il.Emit(OpCodes.Stloc, afArg);
+                   
 
                     MethodInfo? afterCall = typeof(AfterMethodCall).GetMethod("Invoke");
 
@@ -174,11 +264,11 @@ namespace MyProxy.Objects
                         goto RETURN;
 
                     il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldfld, _afterfieldBuilder);
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldfld, _refResult);
-                    il.Emit(OpCodes.Ldobj, info.ReturnType);
+
+                    il.Emit(OpCodes.Ldfld, _afterMethodCall);
+
+                    il.Emit(OpCodes.Ldloc, afArg);
+
                     il.Emit(OpCodes.Callvirt, afterCall);
 
                 }

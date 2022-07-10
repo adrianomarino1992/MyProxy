@@ -1,5 +1,6 @@
 ﻿using MyProxy.Exceptions;
 using MyProxy.Objects;
+using MyProxy.Objects.Delegates;
 using MyRefs.Extensions;
 using System.Reflection;
 
@@ -47,7 +48,7 @@ namespace MyProxy
             return o;
         }
 
-        public static I CreateObjectWithProxy<T,I>(BeforeMethodCall before, AfterMethodCall after,params object[] ctorArgs) where T : I 
+        public static I CreateObjectWithProxy<T,I>(BeforeMethodCall before, AfterMethodCall after, ReplaceMethodCall replace, params object[] ctorArgs) where T : I 
         {
             if (!typeof(I).IsInterface)
                 throw new InvalidTypeException(typeof(I));
@@ -62,7 +63,7 @@ namespace MyProxy
 
             try
             {
-                o = (I)Activator.CreateInstance(new TypeGenerator(before, after).GenerateTypeFrom(typeof(T), typeof(I)), ctorArgs);
+                o = (I)Activator.CreateInstance(new TypeGenerator(before, after, replace).GenerateTypeFrom(typeof(T), typeof(I)), ctorArgs);
             }
             catch(Exception ex)
             {
@@ -75,15 +76,20 @@ namespace MyProxy
             o.GetType().GetField("_delegate_after_call", BindingFlags.Public | BindingFlags.Instance)
             .SetValue(o, after);
 
+            o.GetType().GetField("_delegate_replace_call", BindingFlags.Public | BindingFlags.Instance)
+           .SetValue(o, replace);
+
 #pragma warning restore
             return o;
         }
 
-        public static I AddProxy<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after, params object[] ctorArgs) where T : I
+        public static I AddProxy<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after, ReplaceMethodCall replace,  params object[] ctorArgs) where T : I
         {
-            I o = CreateObjectWithProxy<T,I>(before, after, ctorArgs);
+            I o = CreateObjectWithProxy<T,I>(before, after, replace,ctorArgs);
 
             @object.m_Copy(o);
+
+            
 
             return o;
 
