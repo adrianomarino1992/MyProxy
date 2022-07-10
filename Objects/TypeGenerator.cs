@@ -3,10 +3,10 @@ using System.Reflection.Emit;
 using MyProxy.Objects.Delegates;
 
 namespace MyProxy.Objects
-{   
-   
+{
+
     public class TypeGenerator
-    {       
+    {
 
         public BeforeMethodCall? BeforeMethodCallHandler;
         public ReplaceMethodCall? ReplaceMethodCallHandler;
@@ -35,7 +35,7 @@ namespace MyProxy.Objects
             toCopy = toCopy ?? context;
 
 
-            Type ? tp = ProxyContainer.Container.GetType(toCopy);
+            Type? tp = ProxyContainer.Container.GetType(toCopy);
 
             if (tp != null)
             {
@@ -53,9 +53,9 @@ namespace MyProxy.Objects
 
             SetProxy(tb);
 
-            List<MethodInfo> mthImplementeds = new List<MethodInfo>();                      
+            List<MethodInfo> mthImplementeds = new List<MethodInfo>();
 
-            if(inject)
+            if (inject)
                 mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, mthImplementeds));
 
             foreach (Type @interface in interfaces)
@@ -63,7 +63,7 @@ namespace MyProxy.Objects
                 mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, new List<MethodInfo>(), @interface, true));
             }
 
-            if(!inject)
+            if (!inject)
                 GenerateMethodsFrom(tb, context, mthImplementeds);
 
             tp = tb.CreateType();
@@ -101,7 +101,7 @@ namespace MyProxy.Objects
                     bool sameTypes = aTypes.All(s => infoTypes.Contains(s)) && aTypes.Count == infoTypes.Count;
 
                     return sameName && sameTypes;
-                  
+
                 }))
                 {
                     continue;
@@ -111,7 +111,7 @@ namespace MyProxy.Objects
 
                 MethodAttributes mtAttr = ((info.Attributes & MethodAttributes.Public) > 0 ? MethodAttributes.Public : MethodAttributes.Private) | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual | MethodAttributes.Final;
 
-                if(!@override)
+                if (!@override)
                 {
                     mtAttr = ((info.Attributes & MethodAttributes.Public) > 0 ? MethodAttributes.Public : MethodAttributes.Private) | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Final;
                 }
@@ -151,11 +151,11 @@ namespace MyProxy.Objects
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldstr, info.Name);
                     il.Emit(OpCodes.Ldloc, arr);
-                    il.Emit(OpCodes.Newobj, typeof(BeforeMethodCallArgs).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object[])})!);
-                    
+                    il.Emit(OpCodes.Newobj, typeof(BeforeMethodCallArgs).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object[]) })!);
+
                     il.Emit(OpCodes.Stloc, bfArg);
 
-                    il.Emit(OpCodes.Ldarg_0);                    
+                    il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldfld, _beforeMethodCall);
 
 
@@ -165,7 +165,7 @@ namespace MyProxy.Objects
 
 
                     il.Emit(OpCodes.Ldloc, bfArg);
-                    
+
                     il.Emit(OpCodes.Callvirt, beforeCall);
                 }
 
@@ -194,6 +194,7 @@ namespace MyProxy.Objects
                             }
 
                         }
+                        
 
                         LocalBuilder bfArg = il.DeclareLocal(typeof(ReplaceMethodCall));
 
@@ -216,12 +217,18 @@ namespace MyProxy.Objects
                         il.Emit(OpCodes.Ldloc, bfArg);
 
                         il.Emit(OpCodes.Callvirt, replaceCall);
+
+                        if (info.ReturnType == typeof(void))
+                            il.Emit(OpCodes.Pop);
                     }
                     else
                     {
+                        bool ld_0 = true;
 
                         if (numArgs > 0)
                         {
+                            ld_0 = false;
+
                             for (int i = 0; i <= numArgs; i++)
                             {
                                 il.Emit(OpCodes.Ldarg_S, i);
@@ -236,6 +243,9 @@ namespace MyProxy.Objects
 
                         }
 
+                        if (ld_0)
+                            il.Emit(OpCodes.Ldarg_0);
+
                         il.Emit(OpCodes.Call, md);
                     }
                 }
@@ -245,9 +255,15 @@ namespace MyProxy.Objects
 
                     LocalBuilder reArg = il.DeclareLocal(typeof(object));
 
-                    il.Emit(OpCodes.Stloc, reArg);
+                    if (info.ReturnType == typeof(void))
+                    {
+                        il.Emit(OpCodes.Ldnull);
+                        il.Emit(OpCodes.Stloc, reArg);
+                    }
+                    else
+                        il.Emit(OpCodes.Stloc, reArg);
 
-                    il.Emit(OpCodes.Ldarg_0);                    
+                    il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldstr, info.Name);
                     il.Emit(OpCodes.Ldloc, reArg);
 
@@ -256,7 +272,7 @@ namespace MyProxy.Objects
                     il.Emit(OpCodes.Newobj, typeof(AfterMethodCallArgs).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object) })!);
 
                     il.Emit(OpCodes.Stloc, afArg);
-                   
+
 
                     MethodInfo? afterCall = typeof(AfterMethodCall).GetMethod("Invoke");
 
@@ -270,6 +286,9 @@ namespace MyProxy.Objects
                     il.Emit(OpCodes.Ldloc, afArg);
 
                     il.Emit(OpCodes.Callvirt, afterCall);
+
+                    if (info.ReturnType == typeof(void))
+                        il.Emit(OpCodes.Pop);
 
                 }
 
@@ -290,7 +309,7 @@ namespace MyProxy.Objects
                         );
                 }
 
-                if(@override)
+                if (@override)
                     typeBuilder.DefineMethodOverride(mb, info);
 
             }
