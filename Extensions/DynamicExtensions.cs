@@ -9,14 +9,14 @@ namespace MyProxy
     public static class DynamicExtensions
     {
 
-        public static I InjectCode<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after, params object[] ctorArgs) where T : class , I 
+        public static I InjectCode<T, I>(this T @object, BeforeMethodCall before, AfterMethodCall after, ReplaceMethodCall? replace,  params object[] ctorArgs) where T : class , I 
         {
 #pragma warning disable IDE004 // keep the cast to use correct implementations of interface methods
-            return (I)@object.InjectCode(before, after, ctorArgs);
+            return (I)@object.InjectCode(before, after, replace, ctorArgs);
 #pragma warning restore IDE004
         }
 
-        public static T InjectCode<T>(this T @object, BeforeMethodCall before, AfterMethodCall after, params object[] ctorArgs) where T : class
+        public static T InjectCode<T>(this T @object, BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs) where T : class
         {
             ConstructorInfo? ctor = MyRefs.Extensions.ReflectionExtension.GetCtorByParamsType<T>(ctorArgs.Select(s => s.GetType()).ToArray());
             if (ctor == null)
@@ -28,18 +28,21 @@ namespace MyProxy
 
             try
             {
-                o = (T)Activator.CreateInstance(new TypeGenerator(before, after).GenerateTypeFrom(typeof(T)), ctorArgs);
+                o = (T)Activator.CreateInstance(new TypeGenerator(before, after, replace).GenerateTypeFrom(typeof(T)), ctorArgs);
             }
             catch (Exception ex)
             {
                 throw new FailCastException(typeof(T), typeof(T), ex.Message);
             }
 
-            o.GetType().GetField("_delegate_before_call", BindingFlags.Public | BindingFlags.Instance)
+            o.GetType().GetField(FieldsNames.BEFORE_CALL_METHOD_FIELD_NAME, BindingFlags.Public | BindingFlags.Instance)
              .SetValue(o, before);
 
-            o.GetType().GetField("_delegate_after_call", BindingFlags.Public | BindingFlags.Instance)
+            o.GetType().GetField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, BindingFlags.Public | BindingFlags.Instance)
             .SetValue(o, after);
+
+            o.GetType().GetField(FieldsNames.REPLACE_CALL_METHOD_FIELD_NAME, BindingFlags.Public | BindingFlags.Instance)
+            .SetValue(o, replace);
 
             @object.m_Copy(o);
 
@@ -48,7 +51,7 @@ namespace MyProxy
             return o;
         }
 
-        public static I CreateObjectWithProxy<T,I>(BeforeMethodCall before, AfterMethodCall after, ReplaceMethodCall replace, params object[] ctorArgs) where T : I 
+        public static I CreateObjectWithProxy<T,I>(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs) where T : I 
         {
             if (!typeof(I).IsInterface)
                 throw new InvalidTypeException(typeof(I));
@@ -70,13 +73,13 @@ namespace MyProxy
                 throw new FailCastException(typeof(T), typeof(I), ex.Message);
             }
 
-            o.GetType().GetField("_delegate_before_call", BindingFlags.Public | BindingFlags.Instance)
+            o.GetType().GetField(FieldsNames.BEFORE_CALL_METHOD_FIELD_NAME, BindingFlags.Public | BindingFlags.Instance)
              .SetValue(o, before);
 
-            o.GetType().GetField("_delegate_after_call", BindingFlags.Public | BindingFlags.Instance)
+            o.GetType().GetField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, BindingFlags.Public | BindingFlags.Instance)
             .SetValue(o, after);
 
-            o.GetType().GetField("_delegate_replace_call", BindingFlags.Public | BindingFlags.Instance)
+            o.GetType().GetField(FieldsNames.REPLACE_CALL_METHOD_FIELD_NAME, BindingFlags.Public | BindingFlags.Instance)
            .SetValue(o, replace);
 
 #pragma warning restore

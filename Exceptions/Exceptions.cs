@@ -50,6 +50,8 @@ namespace MyProxy.Exceptions
         public override string Message { get; }
         public MethodNotFoundException(Type type, string name, Type[] @params = null, Type @return = null, string msg = "")
         {
+            @params = @params ?? new Type[] { };
+            @return = @return ?? typeof(void);
 
             Message = msg;
 
