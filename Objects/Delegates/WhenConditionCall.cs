@@ -19,7 +19,19 @@ namespace MyProxy.Objects.Delegates
         public WhenConditionCallArgs(object sender, string name, object[] args, object result)
         {
             Sender = sender;
-            Method = sender.GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, args.Select(s => s.GetType()).ToArray());
+
+            if(args.All(s => s != null))
+            {
+                Method = sender.GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, args.Select(s => s.GetType()).ToArray());
+            }
+            else 
+            {
+
+                Method = sender
+                    .GetType()
+                    .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .FirstOrDefault(s => s.Name == name && s.GetParameters().Count() == args.Length);
+            }
             Arguments = args;
             Result = result;
         }

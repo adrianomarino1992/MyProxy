@@ -13,6 +13,7 @@ namespace MyProxy.Extensions
 {
     public static class ProxyTypeExtensions
     {
+       
 
         public static MethodBinder When<T>(this T proxy, string name) where T : class
         {

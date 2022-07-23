@@ -55,17 +55,14 @@ namespace MyProxy.Objects
             SetProxy(tb);
 
             List<MethodInfo> mthImplementeds = new List<MethodInfo>();
-
-            if (inject)
-                mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, mthImplementeds));
+           
 
             foreach (Type @interface in interfaces)
             {
-                mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, new List<MethodInfo>(), @interface, true));
-            }
-
-            if (!inject)
-                GenerateMethodsFrom(tb, context, mthImplementeds);
+                mthImplementeds.AddRange(GenerateMethodsFrom(tb, context, mthImplementeds, @interface, true));
+            }   
+            
+            GenerateMethodsFrom(tb, context, mthImplementeds);
 
             tp = tb.CreateType();
 
@@ -76,11 +73,11 @@ namespace MyProxy.Objects
 
         public void SetProxy(TypeBuilder typeBuilder)
         {
-            _beforeMethodCall = typeBuilder.DefineField(FieldsNames.BEFORE_CALL_METHOD_FIELD_NAME, typeof(BeforeMethodCall), FieldAttributes.Public);
+            _beforeMethodCall = typeBuilder.DefineField(FieldsNames.BEFORE_CALL_METHOD_FIELD_NAME, typeof(BeforeMethodCall), FieldAttributes.Private);
 
-            _replaceMethodCall = typeBuilder.DefineField(FieldsNames.REPLACE_CALL_METHOD_FIELD_NAME, typeof(ReplaceMethodCall), FieldAttributes.Public);
+            _replaceMethodCall = typeBuilder.DefineField(FieldsNames.REPLACE_CALL_METHOD_FIELD_NAME, typeof(ReplaceMethodCall), FieldAttributes.Private);
 
-            _afterMethodCall = typeBuilder.DefineField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, typeof(AfterMethodCall), FieldAttributes.Public);
+            _afterMethodCall = typeBuilder.DefineField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, typeof(AfterMethodCall), FieldAttributes.Private);
 
             _refBinder = typeBuilder.DefineField(FieldsNames.METHODBINDERS_FIELD_NAME, typeof(List<MethodBinder>), FieldAttributes.Private);
         }
@@ -240,7 +237,7 @@ namespace MyProxy.Objects
 
                     MethodInfo doM = typeof(MethodBinderManager).GetMethod(nameof(MethodBinderManager.ExecuteDOMethod))!;
 
-                    m_CallExtern(il, numArgs, info, doM);
+                    m_CallExtern(il, numArgs, info, doM, info);
                     
                 }
 
@@ -249,7 +246,7 @@ namespace MyProxy.Objects
 
                 MethodInfo checkB = typeof(MethodBinderManager).GetMethod(nameof(MethodBinderManager.CheckBinder))!;
 
-                m_CallExtern(il, numArgs, info, checkB);
+                m_CallExtern(il, numArgs, info, checkB, info);
 
                 if (AfterMethodCallHandler != null)
                 {
@@ -346,14 +343,21 @@ namespace MyProxy.Objects
             return arr;
         }
 
-        private void m_CallExtern(ILGenerator il, int numArgs, MethodInfo info, MethodInfo checkB)
+        private void m_CallExtern(ILGenerator il, int numArgs, MethodInfo info, MethodInfo checkB, MethodInfo methodInfo)
         {           
             ConstructorInfo ctor = typeof(MethodBinderManager).GetConstructor(new Type[] { typeof(object), typeof(string), typeof(object[]), typeof(object) })!;
 
             LocalBuilder currR = il.DeclareLocal(typeof(object));
 
+            Type cast = info.ReturnType;
+
             if (info.ReturnType != typeof(void))
+            {
+                if (cast != null && !cast.Equals(typeof(void)) && cast.IsValueType)
+                    il.Emit(OpCodes.Box, cast);
+
                 il.Emit(OpCodes.Stloc, currR);
+            }
 
             LocalBuilder array = m_CreateArrayOfArgs(il, numArgs, info);
 
@@ -373,6 +377,11 @@ namespace MyProxy.Objects
 
             if (info.ReturnType == typeof(void))
                 il.Emit(OpCodes.Pop);
+                
+            if (!cast!.Equals(typeof(void)) && cast!.IsValueType)
+            {
+                il.Emit(OpCodes.Unbox_Any, info.ReturnType);
+            }
         }
 
     }
