@@ -55,7 +55,10 @@ namespace MyProxy.Objects
             SetProxy(tb);
 
             List<MethodInfo> mthImplementeds = new List<MethodInfo>();
-           
+
+            GenerateFields(tb, context);
+
+            mthImplementeds.AddRange(GenerateProperties(tb, context));
 
             foreach (Type @interface in interfaces)
             {
@@ -63,6 +66,8 @@ namespace MyProxy.Objects
             }   
             
             GenerateMethodsFrom(tb, context, mthImplementeds);
+
+            GenerateConstructors(tb, context);
 
             tp = tb.CreateType();
 
@@ -80,6 +85,97 @@ namespace MyProxy.Objects
             _afterMethodCall = typeBuilder.DefineField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, typeof(AfterMethodCall), FieldAttributes.Private);
 
             _refBinder = typeBuilder.DefineField(FieldsNames.METHODBINDERS_FIELD_NAME, typeof(List<MethodBinder>), FieldAttributes.Private);
+        }
+
+        public void GenerateConstructors(TypeBuilder typeBuilder, Type context)
+        {            
+            foreach(ConstructorInfo c in context.GetConstructors())
+            {
+                ConstructorBuilder ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, c.GetParameters().Select(s => s.ParameterType).ToArray());
+
+                ILGenerator il = ctor.GetILGenerator();
+
+                for(int i = 1; i <= c.GetParameters().Length; i++)
+                {
+                    il.Emit(OpCodes.Ldarg, i);
+                }
+
+                il.Emit(OpCodes.Newobj, c);
+                il.Emit(OpCodes.Pop);
+                il.Emit(OpCodes.Ret);
+
+            }
+
+        }
+
+        public List<MethodInfo> GenerateProperties(TypeBuilder typeBuilder, Type context, bool @override = false)
+        {
+            List<MethodInfo> getSet = new List<MethodInfo>();
+
+            foreach (PropertyInfo p in context.GetProperties())
+            {
+                PropertyBuilder prop = typeBuilder.DefineProperty(p.Name, p.Attributes, p.PropertyType, null);
+
+                MethodAttributes mtAttr = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual | MethodAttributes.Final;
+
+                if (!@override)
+                {
+                    mtAttr = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Final;
+                }
+                                
+                mtAttr |= MethodAttributes.SpecialName;
+
+                MethodBuilder get = typeBuilder.DefineMethod($"get_{p.Name}", mtAttr, CallingConventions.HasThis, p.PropertyType, null);
+
+                ILGenerator il = get.GetILGenerator();
+
+                MethodInfo? getter = context.GetMethod($"get_{p.Name}");
+
+                il.Emit(OpCodes.Ldarg_0);
+
+                if(!@override)
+                    il.Emit(OpCodes.Call, getter!);
+                else
+                    il.Emit(OpCodes.Callvirt, getter!);
+
+                il.Emit(OpCodes.Ret);
+
+                prop.SetGetMethod(get);
+
+                MethodBuilder set = typeBuilder.DefineMethod($"get_{p.Name}", mtAttr, CallingConventions.HasThis, p.PropertyType, null);
+
+                il = set.GetILGenerator();
+
+                MethodInfo? setter = context.GetMethod($"set_{p.Name}");
+
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldarg_1);
+
+                if (!@override)
+                    il.Emit(OpCodes.Call, setter!);
+                else
+                    il.Emit(OpCodes.Callvirt, setter!);
+
+                il.Emit(OpCodes.Ret);
+
+                prop.SetSetMethod(set);
+
+                getSet.Add(getter);
+                getSet.Add(setter);
+
+                
+            }
+
+            return getSet;
+        }
+
+        public void GenerateFields(TypeBuilder typeBuilder, Type context)
+        {
+            foreach (FieldInfo f in context.GetFields())
+            {
+                FieldBuilder field = typeBuilder.DefineField(f.Name, f.FieldType, f.Attributes);
+            }
+
         }
 
         public List<MethodInfo> GenerateMethodsFrom(TypeBuilder typeBuilder, Type context, List<MethodInfo> mthIgnore, Type? toCopy = null, bool @override = false)
@@ -114,7 +210,10 @@ namespace MyProxy.Objects
                     mtAttr = ((info.Attributes & MethodAttributes.Public) > 0 ? MethodAttributes.Public : MethodAttributes.Private) | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Final;
                 }
 
+             
+
                 MethodBuilder mb = typeBuilder.DefineMethod(info.Name, mtAttr, CallingConventions.HasThis, info.ReturnType, info.GetParameters().Select(s => s.ParameterType).ToArray());
+                               
 
                 ILGenerator il = mb.GetILGenerator();
 
@@ -225,7 +324,10 @@ namespace MyProxy.Objects
                         if (ld_0)
                             il.Emit(OpCodes.Ldarg_0);
 
-                        il.Emit(OpCodes.Call, md);
+                        if(@override)
+                            il.Emit(OpCodes.Callvirt, md);
+                        else
+                            il.Emit(OpCodes.Call, md);
                     }
 
                     il.Emit(OpCodes.Br, afterLabel);

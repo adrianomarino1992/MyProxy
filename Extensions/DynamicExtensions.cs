@@ -9,14 +9,15 @@ namespace MyProxy
     public static class DynamicExtensions
     {
 
-        public static I ActLike<I>(this object @object, params object[] ctorArgs) where I : class
+        
+        public static I AppendEventListener<I>(this object @object, params object[] ctorArgs) where I : class
         {
 #pragma warning disable IDE004 // keep the cast to use correct implementations of interface methods
             return (I)@object._InjectCode(null, null, null, ctorArgs);
 #pragma warning restore IDE004
         }
 
-        public static I ActLike<T, I>(this T @object, params object[] ctorArgs) where T : class, I
+        public static I AppendEventListener<T, I>(this T @object, params object[] ctorArgs) where T : class, I
         {
 #pragma warning disable IDE004 // keep the cast to use correct implementations of interface methods
             return (I)@object._InjectCode(null,null,null, ctorArgs);
@@ -37,6 +38,7 @@ namespace MyProxy
             return (I)@object._InjectCode(before, after, replace, ctorArgs);
 #pragma warning restore IDE004
         }
+
 
         private static object _InjectCode(this object @object, BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs) 
         {
@@ -74,6 +76,52 @@ namespace MyProxy
 
             return o;
         }
+
+        public static T CreateListener<T>() where T : class
+        {
+            return CreateListener<T>(null, null, null, new object[] { });
+        }
+
+        public static T CreateListener<T>(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs) where T : class
+        {
+            return (T)CreateListenerFromObject(typeof(T), before, after, replace, ctorArgs);
+        }
+
+        public static object CreateListenerFromObject(Type bType, BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs)
+        {
+            ConstructorInfo? ctor = MyRefs.Extensions.ReflectionExtension.GetCtorByParamsType(bType, ctorArgs.Select(s => s.GetType()).ToArray());
+            if (ctor == null)
+                throw new MyRefs.Exceptions.ContructorNotFoundException(bType, $"The type {bType.Name} do not have a constructor like {bType.Name}({String.Join(",", ctorArgs.Select(s => s.GetType().Name).ToArray())})");
+
+#pragma warning disable
+
+            object o = null;
+
+            try
+            {
+                Type pType = new TypeGenerator(before, after, replace).GenerateTypeFrom(bType);
+
+                ctor = MyRefs.Extensions.ReflectionExtension.GetCtorByParamsType(pType, ctorArgs.Select(s => s.GetType()).ToArray());
+
+                o = ctor.Invoke(ctorArgs);
+            }
+            catch (Exception ex)
+            {
+                throw new FailCastException(bType, bType, ex.Message);
+            }
+
+            o.GetType().GetField(FieldsNames.BEFORE_CALL_METHOD_FIELD_NAME, BindingFlags.NonPublic | BindingFlags.Instance)
+             .SetValue(o, before);
+
+            o.GetType().GetField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, BindingFlags.NonPublic | BindingFlags.Instance)
+            .SetValue(o, after);
+
+            o.GetType().GetField(FieldsNames.REPLACE_CALL_METHOD_FIELD_NAME, BindingFlags.NonPublic | BindingFlags.Instance)
+            .SetValue(o, replace);
+
+            return o;
+        }
+
 
         public static I CreateObjectWithProxy<T,I>(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs) where T : class, I 
         {
