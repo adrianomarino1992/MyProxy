@@ -1,6 +1,6 @@
-# MyORMForPostgreSQL
+# MyProxy
 
-MyORMForPostgreSQL is a implementation of MyORM that uses PostgreSQL as database. 
+MyProxy allow us to add proxy or turn our objects in event listeners objects. 
 
 
 ## Installation
@@ -8,19 +8,19 @@ MyORMForPostgreSQL is a implementation of MyORM that uses PostgreSQL as database
 .NET CLI
 
 ```bash
-dotnet add package Adr.MyORMForPostgreSQL --version 2.0.0
+dotnet add package Adr.MyProxy  --version 2.0.0
 ```
 
 Nuget package manager
 
 ```bash
-PM> Install-Package Adr.MyORMForPostgreSQL -Version 2.0.0
+PM> Install-Package Adr.MyProxy -Version 2.0.0
 ```
 
 packageReference
 
 ```bash
-<PackageReference Include="Adr.MyORMForPostgreSQL" Version="2.0.0" />
+<PackageReference Include="Adr.MyProxy " Version="2.0.0" />
 ```
 
 ## Usage
