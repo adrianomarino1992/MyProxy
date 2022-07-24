@@ -100,7 +100,7 @@ IPerson p = MyProxy.DynamicExtensions.CreateListener<Person>(); // create a inst
 
 **We can add before and after delegates to all methods in a object:**
 ```csharp
- IPerson p = new Person()
+           IPerson p = new Person()
                 .AddProxy<Person, IPerson>(
                 new BeforeMethodCall(args => Console.WriteLine($"Berofe the method {args.Method!.Name}")), 
                 new AfterMethodCall(args => {
