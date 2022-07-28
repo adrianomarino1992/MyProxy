@@ -7,9 +7,8 @@ using System.Reflection;
 namespace MyProxy
 {
     public static class DynamicExtensions
-    {
+    {        
 
-        
         public static I AppendEventListener<I>(this object @object, params object[] ctorArgs) where I : class
         {
 #pragma warning disable IDE004 // keep the cast to use correct implementations of interface methods
@@ -122,6 +121,48 @@ namespace MyProxy
             return o;
         }
 
+
+        public static I CreateObjectLike<I>()
+        {
+            return (I)CreateObjectLike(typeof(I), new Type[] { }, new object[] { });
+        }
+
+
+        public static I CreateObjectLike<I>(Type[] cTorArgsTypes, params object[] cTorArgs)
+        {
+            return (I)CreateObjectLike(typeof(I), cTorArgsTypes, cTorArgs);
+        }
+
+        public static object CreateObjectLike(Type type, Type[] cTorArgsTypes, params object[] cTorArgs)
+        {
+            if (type.IsAbstract || type.IsInterface)
+                throw new InvalidTypeException(type, $"The type {type.Name} must be a concrete type");
+
+            ConstructorInfo? cTor = type.GetConstructor(cTorArgsTypes);
+
+            if (cTor is null)
+            {
+                throw new MyRefs.Exceptions.ContructorNotFoundException(type, $"The type {type.Name} do not have any constructor that matchs the list of arguments");
+            }
+
+            try
+            {
+                object o;
+
+                Type pType = new TypeGenerator(null, null, null).GenerateTypeFrom(type)!;
+
+                cTor = pType.GetConstructor(cTorArgsTypes);
+
+                o = cTor.Invoke(cTorArgs);
+
+                return o;
+            }
+            catch (Exception ex)
+            {
+                throw new FailCastException(type, type, ex.Message);
+            }
+
+        }
 
         public static I CreateObjectWithProxy<T,I>(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace, params object[] ctorArgs) where T : class, I 
         {
