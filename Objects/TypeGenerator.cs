@@ -19,6 +19,7 @@ namespace MyProxy.Objects
         private FieldBuilder _replaceMethodCall;
         private FieldBuilder _afterMethodCall;        
         private FieldBuilder _refBinder;
+        private FieldBuilder _refCurrMethod;
 
 #pragma warning disable
         public TypeGenerator(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace = null)
@@ -83,6 +84,8 @@ namespace MyProxy.Objects
             _replaceMethodCall = typeBuilder.DefineField(FieldsNames.REPLACE_CALL_METHOD_FIELD_NAME, typeof(ReplaceMethodCall), FieldAttributes.Private);
 
             _afterMethodCall = typeBuilder.DefineField(FieldsNames.AFTER_CALL_METHOD_FIELD_NAME, typeof(AfterMethodCall), FieldAttributes.Private);
+
+            _refCurrMethod = typeBuilder.DefineField(FieldsNames.CURRENT_METHOD_RUNNING_NAME, typeof(string), FieldAttributes.Private);
 
             _refBinder = typeBuilder.DefineField(FieldsNames.METHODBINDERS_FIELD_NAME, typeof(List<MethodBinder>), FieldAttributes.Private);
         }
@@ -222,6 +225,11 @@ namespace MyProxy.Objects
                 Label beforeLabel = il.DefineLabel();
                 Label afterLabel = il.DefineLabel();
                 Label codeLabel = il.DefineLabel();
+
+                il.Emit(OpCodes.Nop);
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldstr, $"{info.ReturnType.Name}<>{info.Name}{{{String.Join(',', info.GetParameters().Select(s => s.ParameterType.Name))}}}");
+                il.Emit(OpCodes.Stfld, _refCurrMethod);
 
                 int numArgs = info.GetParameters().Count();
 
@@ -490,9 +498,10 @@ namespace MyProxy.Objects
 
     internal static class FieldsNames
     {
-        internal const string BEFORE_CALL_METHOD_FIELD_NAME = "_delegate_before_call";
-        internal const string REPLACE_CALL_METHOD_FIELD_NAME = "_delegate_replace_call";
-        internal const string AFTER_CALL_METHOD_FIELD_NAME = "_delegate_after_call";
+        internal const string BEFORE_CALL_METHOD_FIELD_NAME = "_delegateBeforeCall";
+        internal const string REPLACE_CALL_METHOD_FIELD_NAME = "_delegateReplaceCall";
+        internal const string AFTER_CALL_METHOD_FIELD_NAME = "_delegateAfterCall";
         internal const string METHODBINDERS_FIELD_NAME = "_refBinder";
+        internal const string CURRENT_METHOD_RUNNING_NAME = "_refCurrMethod";
     }
 }
