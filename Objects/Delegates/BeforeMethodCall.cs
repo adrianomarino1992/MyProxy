@@ -19,7 +19,7 @@ namespace MyProxy.Objects.Delegates
         public BeforeMethodCallArgs(object sender, string name, object[] args)
         {
             Sender = sender;
-            Method = sender.GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, args.Select(s => s.GetType()).ToArray());
+            Method = DelegatesHelpers.GetCurrentMethod(sender, name);
             Arguments = args;
         }
     }
