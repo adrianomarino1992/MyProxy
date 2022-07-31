@@ -9,7 +9,12 @@ namespace MyProxy.Extensions
     public static class ProxyTypeExtensions
     {
 
-        public static MethodBinder When<T>(this T proxy, string name) where T : class
+        public static MethodBinder When<T>(this T proxy, string name) where T : class 
+        {
+            return proxy.When(name);
+        }
+
+        public static MethodBinder When<T>(this T proxy, string name, params object[] args) where T : class
         {
             if (!proxy.GetType().GetInterfaces().Contains(typeof(IProxyType)))
             {
@@ -32,10 +37,8 @@ namespace MyProxy.Extensions
                 throw new MethodNotFoundException(t, name);
             }
 
-            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, MethodBinder.ProxyMethodType.REPLACE);
-
-            if (binder != null)
-                binders!.Remove(binder);
+            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, args, MethodBinder.ProxyMethodType.REPLACE);
+                       
 
             binders!.Add(newbinder);
 
@@ -71,10 +74,7 @@ namespace MyProxy.Extensions
                 throw new MethodNotFoundException(t, name);
             }
 
-            MethodBinder newbinder = new MethodBinder(t, m!, @do, proxy, MethodBinder.ProxyMethodType.REPLACE);
-
-            if (binder != null)
-                binders!.Remove(binder);
+            MethodBinder newbinder = new MethodBinder(t, m!, @do, proxy, null, MethodBinder.ProxyMethodType.REPLACE);
 
             binders!.Add(newbinder);
 

@@ -270,10 +270,11 @@ namespace MyProxy.Objects
                 {
                     MethodInfo chDo = typeof(MethodBinderManager).GetMethod(nameof(MethodBinderManager.HasDoProxy))!;
 
+                    LocalBuilder arguments = m_CreateArrayOfArgs(il, numArgs, info); 
                     il.Emit(OpCodes.Ldstr, info.Name);
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldfld, _refBinder);
-
+                    il.Emit(OpCodes.Ldloc, arguments);
                     il.Emit(OpCodes.Call, chDo);
                     
                     il.Emit(OpCodes.Brtrue, doLabel);
@@ -355,11 +356,7 @@ namespace MyProxy.Objects
                 }
 
 
-                il.MarkLabel(afterLabel);
-
-                MethodInfo checkB = typeof(MethodBinderManager).GetMethod(nameof(MethodBinderManager.CheckBinder))!;
-
-                m_CallExtern(il, numArgs, info, checkB, info);
+                il.MarkLabel(afterLabel);               
 
                 if (AfterMethodCallHandler != null)
                 {

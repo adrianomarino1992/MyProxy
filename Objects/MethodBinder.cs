@@ -14,17 +14,19 @@ namespace MyProxy.Objects
         public Type Type { get; private set; }
         public object Sender { get; private set; }
                
+        public object[]? Args { get; private set; }
         public ProxyMethodType ProxyType { get; private set; }
         public MethodInfo Method { get; private set; }
 
         public MyProxy.Objects.Delegates.WhenConditionCall? Action { get; private set; }
 
-        public MethodBinder(Type type, MethodInfo method, WhenConditionCall? action, object sender, ProxyMethodType proxyType)
+        public MethodBinder(Type type, MethodInfo method, WhenConditionCall? action, object sender, object[]? args,  ProxyMethodType proxyType)
         {
             Type = type;
             Method = method;
             Action = action;
             Sender = sender;
+            Args = args;
             ProxyType = proxyType;
         }
 
@@ -59,15 +61,26 @@ namespace MyProxy.Objects
                 Result = result;
             }
 
-            public static bool HasDoProxy(string method, List<MethodBinder> binders)
+            public static bool HasDoProxy(string method, List<MethodBinder> binders, object[] args)
             {
                 if (binders == null)
                     return false;
 
-                MethodBinder? binder = binders.FirstOrDefault(s => s.Method?.Name == method && s.ProxyType == ProxyMethodType.DO);
+                List<MethodBinder>? methods = binders.Where(s => s.Method?.Name == method && s.ProxyType == ProxyMethodType.DO).ToList();
 
-                if (binder == null || binder.Action == null)
+                if (methods == null || methods.Count == 0)
                     return false;
+
+                MethodBinder? binder = methods.Where(s => s.Args != null)
+                    .Where(s => s.Args!.All(a => args.Any(p => p.Equals(a)))).FirstOrDefault();
+
+                if (binder == null)
+                {
+                    binder = methods.FirstOrDefault(s => s.Args is null);
+                }
+
+                if (binder == null)
+                    return false;               
 
                 return true;
             }
@@ -87,12 +100,25 @@ namespace MyProxy.Objects
                 if (binders == null)
                     return args.Result;
 
-                MethodBinder? binder = binders.FirstOrDefault(s => s.Method?.Name == args.Name && s.ProxyType == typeCall);
+                List<MethodBinder>? methods = binders.Where(s => s.Method?.Name == args.Name && s.ProxyType == typeCall).ToList();
 
-                if (binder == null || binder.Action == null)
+                if (methods == null || methods.Count == 0)
                     return args.Result;
 
-                return binder.Action.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result));
+                MethodBinder? binder = methods.Where(s => s.Args != null)
+                    .Where(s => s.Args!.All(a => args.Args.Any(p => p.Equals(a)))).FirstOrDefault();
+
+                if(binder == null)
+                {
+                    binder = methods.FirstOrDefault(s => s.Args is null);
+                }
+
+                if (binder == null)
+                    return args.Result;
+
+                return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result));
+
+               
             }
         }
 
