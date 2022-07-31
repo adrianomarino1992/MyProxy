@@ -20,6 +20,7 @@ namespace MyProxy.Objects
         private FieldBuilder _afterMethodCall;        
         private FieldBuilder _refBinder;
         private FieldBuilder _refCurrMethod;
+        private FieldBuilder _refMethodCounter;
 
 #pragma warning disable
         public TypeGenerator(BeforeMethodCall? before, AfterMethodCall? after, ReplaceMethodCall? replace = null)
@@ -88,6 +89,8 @@ namespace MyProxy.Objects
             _refCurrMethod = typeBuilder.DefineField(FieldsNames.CURRENT_METHOD_RUNNING_NAME, typeof(string), FieldAttributes.Private);
 
             _refBinder = typeBuilder.DefineField(FieldsNames.METHODBINDERS_FIELD_NAME, typeof(List<MethodBinder>), FieldAttributes.Private);
+
+            _refMethodCounter = typeBuilder.DefineField(FieldsNames.METHODS_INVOKED_LIST, typeof(List<MethodInvoked>), FieldAttributes.Private);
         }
 
         public void GenerateConstructors(TypeBuilder typeBuilder, Type context)
@@ -163,8 +166,8 @@ namespace MyProxy.Objects
 
                 prop.SetSetMethod(set);
 
-                getSet.Add(getter);
-                getSet.Add(setter);
+                getSet.Add(getter!);
+                getSet.Add(setter!);
 
                 
             }
@@ -228,7 +231,7 @@ namespace MyProxy.Objects
 
                 il.Emit(OpCodes.Nop);
                 il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldstr, $"{info.ReturnType.Name}<>{info.Name}{{{String.Join(',', info.GetParameters().Select(s => s.ParameterType.Name))}}}");
+                il.Emit(OpCodes.Ldstr, MethodInvoked.GenerateSignature(info));
                 il.Emit(OpCodes.Stfld, _refCurrMethod);
 
                 int numArgs = info.GetParameters().Count();
@@ -369,7 +372,13 @@ namespace MyProxy.Objects
                         il.Emit(OpCodes.Stloc, reArg);
                     }
                     else
+                    {
+                        if (info.ReturnType.IsValueType)
+                            il.Emit(OpCodes.Box, info.ReturnType);
+
                         il.Emit(OpCodes.Stloc, reArg);
+
+                    }
 
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldstr, info.Name);
@@ -394,15 +403,22 @@ namespace MyProxy.Objects
                     il.Emit(OpCodes.Ldloc, afArg);
 
                     il.Emit(OpCodes.Callvirt, afterCall);
-
+                   
                     if (info.ReturnType == typeof(void))
                         il.Emit(OpCodes.Pop);
+                    else
+                    {
+                        if (info.ReturnType.IsValueType)
+                            il.Emit(OpCodes.Unbox_Any, info.ReturnType);
+                    }
+                   
 
                 }
 
             RETURN:
                 {
                     il.MarkLabel(exitCode);
+                    m_CreateMethodInvokedEvent(il, numArgs, info);
                     il.Emit(OpCodes.Ret);
                 }
 
@@ -424,6 +440,55 @@ namespace MyProxy.Objects
             }
 
             return news;
+
+        }
+
+        private void m_CreateMethodInvokedEvent(ILGenerator il, int numArgs, MethodInfo info)
+        {
+            LocalBuilder? result = null;
+
+            if (info.ReturnType != typeof(void))
+            {
+                result = il.DeclareLocal(typeof(object));
+
+                if(info.ReturnType.IsValueType)
+                    il.Emit(OpCodes.Box, info.ReturnType);
+
+                il.Emit(OpCodes.Stloc, result);
+
+            }
+            
+
+            LocalBuilder args = m_CreateArrayOfArgs(il, numArgs, info);
+
+            ConstructorInfo? cTor = typeof(MethodInvoked).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, new Type[] { typeof(string), typeof(object[]), typeof(object), typeof(object) });
+
+            il.Emit(OpCodes.Ldstr, MethodInvoked.GenerateSignature(info));
+            il.Emit(OpCodes.Ldloc, args);
+            il.Emit(OpCodes.Ldarg_0);
+            if (result != null)
+            {
+                il.Emit(OpCodes.Ldloc, result!);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
+            il.Emit(OpCodes.Newobj, cTor!);
+            
+            il.Emit(OpCodes.Ldarg_0);
+
+            MethodInfo? addInvMethod = typeof(MethodInvoked).GetMethod(nameof(MethodInvoked.AddInvocationEvent), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+
+            il.Emit(OpCodes.Call, addInvMethod!);
+
+            if (result != null)
+            {
+                il.Emit(OpCodes.Ldloc, result!);
+
+                if (info.ReturnType.IsValueType)
+                    il.Emit(OpCodes.Unbox_Any, info.ReturnType);
+            }            
 
         }
 
@@ -503,5 +568,6 @@ namespace MyProxy.Objects
         internal const string AFTER_CALL_METHOD_FIELD_NAME = "_delegateAfterCall";
         internal const string METHODBINDERS_FIELD_NAME = "_refBinder";
         internal const string CURRENT_METHOD_RUNNING_NAME = "_refCurrMethod";
+        internal const string METHODS_INVOKED_LIST = "_refMethodCounter";
     }
 }

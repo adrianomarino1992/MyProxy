@@ -23,7 +23,7 @@ namespace MyProxy.Objects.Delegates
         {
             Sender = sender;
             MethodName = methodName;
-            Method = DelegatesHelpers.GetCurrentMethod(sender, methodName);
+            Method = DelegatesHelpers.GetCurrentMethod(sender);
             Result = result;
         }
     }

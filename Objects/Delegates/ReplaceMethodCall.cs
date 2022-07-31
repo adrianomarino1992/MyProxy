@@ -18,7 +18,7 @@ namespace MyProxy.Objects.Delegates
         public ReplaceMethodCallArgs(object sender, string name, object[] args)
         {
             Sender = sender;
-            Method = DelegatesHelpers.GetCurrentMethod(sender, name);
+            Method = DelegatesHelpers.GetCurrentMethod(sender);
             Arguments = args;
         }
     }
