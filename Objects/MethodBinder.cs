@@ -12,8 +12,8 @@ namespace MyProxy.Objects
     public class MethodBinder
     {
         public Type Type { get; private set; }
-        public object Sender { get; private set; }
-               
+        public object Sender { get; private set; }               
+        public bool IsAsync { get; internal set; }
         public object[]? Args { get; private set; }
         public ProxyMethodType ProxyType { get; private set; }
         public MethodInfo Method { get; private set; }
@@ -30,11 +30,14 @@ namespace MyProxy.Objects
             ProxyType = proxyType;
         }
 
-        public void Do(WhenConditionCall call)
+        public DoPromisse Do(WhenConditionCall call)
         {
             this.Action = call;
             this.ProxyType = ProxyMethodType.DO;
+
+            return new DoPromisse(this);
         }
+        
 
         public enum ProxyMethodType 
         {
@@ -95,6 +98,11 @@ namespace MyProxy.Objects
                 return m_Run(args, binders);
             }
 
+            public static Type CheckType(object o)
+            {
+                return o.GetType();
+            }
+
             private static object m_Run(MethodBinderManager args, List<MethodBinder> binders, ProxyMethodType typeCall = ProxyMethodType.REPLACE)
             {
                 if (binders == null)
@@ -116,14 +124,47 @@ namespace MyProxy.Objects
                 if (binder == null)
                     return args.Result;
 
-                return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result));
+                if (binder.IsAsync)
+                {
+                    var o = binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result)); 
 
-               
+                    if (o is null)
+                        return Task.CompletedTask;
+
+                    if (o.GetType().IsAssignableTo(typeof(Task)))
+                        return o;
+#pragma warning disable
+                    MethodInfo? createTaskGeneric = typeof(Task).GetMethod(nameof(Task.FromResult)).MakeGenericMethod(o.GetType());
+
+                    if (createTaskGeneric == null)
+                        return o;
+
+                    return createTaskGeneric!.Invoke(null, new object[] { o });
+#pragma warning restore;
+
+                }
+                else
+                    return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result));
+
+
             }
         }
 
-        
-                
+
+        public class DoPromisse 
+        {
+            public MethodBinder MethodBinder { get; }
+
+            internal DoPromisse(MethodBinder method)
+            {
+                MethodBinder = method;
+            }
+
+            public void AsAsyncTask()
+            {
+                MethodBinder.IsAsync = true;
+            }
+        }
     }
 
 }

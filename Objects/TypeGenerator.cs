@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿
+#undef GENERATE_WITH_FIEDLS_AND_PROPS
+
+using System.Reflection;
 using System.Reflection.Emit;
 using MyProxy.Objects.Delegates;
 using MyProxy.Objects.Interfaces;
@@ -58,9 +61,12 @@ namespace MyProxy.Objects
 
             List<MethodInfo> mthImplementeds = new List<MethodInfo>();
 
+#if GENERATE_WITH_FIEDLS_AND_PROPS            
+           
             GenerateFields(tb, context);
 
             mthImplementeds.AddRange(GenerateProperties(tb, context));
+#endif
 
             foreach (Type @interface in interfaces)
             {
@@ -73,7 +79,7 @@ namespace MyProxy.Objects
 
             tp = tb.CreateType();
 
-            ProxyContainer.Container.AddType(toCopy, tp);
+            ProxyContainer.Container.AddType(toCopy, tp!);
 
             return tp;
         }
@@ -101,13 +107,13 @@ namespace MyProxy.Objects
 
                 ILGenerator il = ctor.GetILGenerator();
 
-                for(int i = 1; i <= c.GetParameters().Length; i++)
+                for(int i = 0; i <= c.GetParameters().Length; i++)
                 {
                     il.Emit(OpCodes.Ldarg, i);
                 }
 
-                il.Emit(OpCodes.Newobj, c);
-                il.Emit(OpCodes.Pop);
+                il.Emit(OpCodes.Call, c);
+                il.Emit(OpCodes.Nop);
                 il.Emit(OpCodes.Ret);
 
             }
@@ -200,7 +206,13 @@ namespace MyProxy.Objects
 
                     bool sameTypes = aTypes.All(s => infoTypes.Contains(s)) && aTypes.Count == infoTypes.Count;
 
-                    return sameName && sameTypes;
+                    if (sameName && sameTypes)
+                        return true;
+
+                    string sigF = DelegatesHelpers.GenerateSignature(a);
+                    string sigS = DelegatesHelpers.GenerateSignature(info);
+
+                    return sigF.Equals(sigS);
 
                 }))
                 {
@@ -219,7 +231,6 @@ namespace MyProxy.Objects
              
 
                 MethodBuilder mb = typeBuilder.DefineMethod(info.Name, mtAttr, CallingConventions.HasThis, info.ReturnType, info.GetParameters().Select(s => s.ParameterType).ToArray());
-                               
 
                 ILGenerator il = mb.GetILGenerator();
 
@@ -325,9 +336,44 @@ namespace MyProxy.Objects
                             }
                         }
 
-                        MethodInfo? md = context.GetMethod(info.Name, info.GetParameters().Select(s => s.ParameterType).ToArray());
+                        MethodInfo? md = context.GetMethod(info.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance , info.GetParameters().Select(s => s.ParameterType).ToArray());
 
-                        if (md == null || info.ReturnType != md.ReturnType)
+                        if(md == null)
+                        {
+                            var methods = context.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                            var paras = info.GetParameters().Select(s => s.ParameterType.Name).ToList();
+
+                            foreach(var m in methods)
+                            {
+                                if(m.Name == info.Name && (m.ReturnType.Equals(info.ReturnType) || m.ReturnType.Name.Equals(info.ReturnType.Name)))
+                                {
+                                    bool match = true;
+                                    var n = m.GetParameters().Select(s => s.ParameterType.Name).ToList();
+                                    for(int i = 0; i < n.Count(); i++)
+                                    {
+                                        if (!n[i].Equals(paras[i]))
+                                        {
+                                            match = false;
+                                        }
+                                    }
+
+                                    if (match)
+                                    {
+                                        md = m;
+                                        goto _EXITFINDLOOP;
+                                    }
+                                }
+
+                            }
+
+                            _EXITFINDLOOP: 
+                            {
+                                
+                            }
+
+                        }
+
+                        if (md == null)
                         {
                             throw new Exceptions.MethodNotFoundException(context, info.Name, info.GetParameters().Select(s => s.ParameterType).ToArray(), info.ReturnType);
 
@@ -421,6 +467,15 @@ namespace MyProxy.Objects
 
                 int p = 0;
 
+                
+
+                if(info.IsGenericMethod)
+                {
+                    Type[] generics = info.GetGenericArguments();                    
+                    string[] names = generics.Select(s => s.Name).ToArray();
+                    GenericTypeParameterBuilder[] parametersGenerics = mb.DefineGenericParameters(names);
+                }
+
                 foreach (var item in info.GetParameters())
                 {
                     ParameterBuilder pb = mb.DefineParameter
@@ -483,7 +538,7 @@ namespace MyProxy.Objects
             {
                 il.Emit(OpCodes.Ldloc, result!);
 
-                if (info.ReturnType.IsValueType)
+                if(info.ReturnType.IsValueType)
                     il.Emit(OpCodes.Unbox_Any, info.ReturnType);
             }            
 

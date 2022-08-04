@@ -11,10 +11,10 @@ namespace MyProxy.Extensions
 
         public static MethodBinder When<T>(this T proxy, string name) where T : class 
         {
-            return proxy.When(name);
+            return proxy.When(name, args: null);
         }
 
-        public static MethodBinder When<T>(this T proxy, string name, params object[] args) where T : class
+        public static MethodBinder When<T>(this T proxy, string name, params object[]? args) where T : class
         {
             if (!proxy.GetType().GetInterfaces().Contains(typeof(IProxyType)))
             {
@@ -96,7 +96,7 @@ namespace MyProxy.Extensions
             return new MethodsInvokedCollection(calls);
         }
 
-        public static bool HasExecuted<T>(this T proxy, string method, Type[] argsTypes = null, object[] args = null) where T : class
+        public static bool HasExecuted<T>(this T proxy, string method, Type[]? argsTypes = null, object[]? args = null) where T : class
         {
             var calls = proxy.GetMethodInvokeds();
 
@@ -105,7 +105,7 @@ namespace MyProxy.Extensions
             if (methods.Count() == 0)
                 return false;
 
-            if (argsTypes != null || !methods.Any(s =>
+            if (argsTypes != null && !methods.Any(s =>
             {
                 return s.Method.Name == method && s.Parameters.All(p => argsTypes!.Contains(p));
 
@@ -114,7 +114,7 @@ namespace MyProxy.Extensions
                 return false;
             }
 
-            if (args != null || !methods.Any(s =>
+            if (args != null && !methods.Any(s =>
             {
                 return s.Method.Name == method && s.Args.All(p => args!.Any(a => a.Equals(p)));
 
