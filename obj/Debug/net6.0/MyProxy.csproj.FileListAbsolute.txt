@@ -6,9 +6,6 @@ C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Debug\net6.0\MyProxy.csproj.Cor
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Debug\net6.0\MyProxy.deps.json
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Debug\net6.0\MyProxy.dll
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Debug\net6.0\MyProxy.pdb
-C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Debug\net6.0\MyRefs.dll
-C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Debug\net6.0\MyRefs.pdb
-C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Debug\net6.0\MyProxy.csproj.CopyComplete
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Debug\net6.0\MyProxy.dll
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Debug\net6.0\refint\MyProxy.dll
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Debug\net6.0\MyProxy.pdb

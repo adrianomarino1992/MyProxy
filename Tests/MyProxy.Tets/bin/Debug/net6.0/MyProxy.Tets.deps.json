@@ -18,6 +18,14 @@
           "MyProxy.Tets.dll": {}
         }
       },
+      "Adr.MyRefs/1.1.0": {
+        "runtime": {
+          "lib/net6.0/MyRefs.dll": {
+            "assemblyVersion": "1.1.0.0",
+            "fileVersion": "1.1.0.0"
+          }
+        }
+      },
       "coverlet.collector/3.1.2": {},
       "Microsoft.CodeCoverage/17.1.0": {
         "runtime": {
@@ -1092,15 +1100,10 @@
       "xunit.runner.visualstudio/2.4.3": {},
       "MyProxy/1.0.0": {
         "dependencies": {
-          "MyRefs": "1.0.0"
+          "Adr.MyRefs": "1.1.0"
         },
         "runtime": {
           "MyProxy.dll": {}
-        }
-      },
-      "MyRefs/1.0.0": {
-        "runtime": {
-          "MyRefs.dll": {}
         }
       }
     }
@@ -1110,6 +1113,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Adr.MyRefs/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3qWLXA5cBs/7kfc1BK49ZmS/b5dO20pVMTYmvAV7ljBDAKaGbwhQK3VVwjcc0D0B28QjFjSyIbEExjMck9qW+w==",
+      "path": "adr.myrefs/1.1.0",
+      "hashPath": "adr.myrefs.1.1.0.nupkg.sha512"
     },
     "coverlet.collector/3.1.2": {
       "type": "package",
@@ -1756,11 +1766,6 @@
       "hashPath": "xunit.runner.visualstudio.2.4.3.nupkg.sha512"
     },
     "MyProxy/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "MyRefs/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

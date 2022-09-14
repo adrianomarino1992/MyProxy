@@ -1,0 +1,12 @@
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Release\net6.0\MyProxy.deps.json
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Release\net6.0\MyProxy.dll
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\bin\Release\net6.0\MyProxy.pdb
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.csproj.AssemblyReference.cache
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.AssemblyInfoInputs.cache
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.AssemblyInfo.cs
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.csproj.CoreCompileInputs.cache
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.dll
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\refint\MyProxy.dll
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\MyProxy.pdb
+C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\obj\Release\net6.0\ref\MyProxy.dll

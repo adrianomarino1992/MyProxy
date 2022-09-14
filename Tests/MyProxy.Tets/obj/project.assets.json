@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     "net6.0": {
+      "Adr.MyRefs/1.1.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/MyRefs.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/MyRefs.dll": {}
+        }
+      },
       "coverlet.collector/3.1.2": {
         "type": "package",
         "build": {
@@ -1675,28 +1684,33 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
         "dependencies": {
-          "MyRefs": "1.0.0"
+          "Adr.MyRefs": "1.1.0"
         },
         "compile": {
           "bin/placeholder/MyProxy.dll": {}
         },
         "runtime": {
           "bin/placeholder/MyProxy.dll": {}
-        }
-      },
-      "MyRefs/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v6.0",
-        "compile": {
-          "bin/placeholder/MyRefs.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/MyRefs.dll": {}
         }
       }
     }
   },
   "libraries": {
+    "Adr.MyRefs/1.1.0": {
+      "sha512": "3qWLXA5cBs/7kfc1BK49ZmS/b5dO20pVMTYmvAV7ljBDAKaGbwhQK3VVwjcc0D0B28QjFjSyIbEExjMck9qW+w==",
+      "type": "package",
+      "path": "adr.myrefs/1.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "adr.myrefs.1.1.0.nupkg.sha512",
+        "adr.myrefs.nuspec",
+        "lib/net6.0/MyRefs.deps.json",
+        "lib/net6.0/MyRefs.dll",
+        "lib/net6.0/MyRefs.pdb"
+      ]
+    },
     "coverlet.collector/3.1.2": {
       "sha512": "wuLDIDKD5XMt0A7lE31JPenT7QQwZPFkP5rRpdJeblyXZ9MGLI8rYjvm5fvAKln+2/X+4IxxQDxBtwdrqKNLZw==",
       "type": "package",
@@ -5994,11 +6008,6 @@
       "type": "project",
       "path": "../../MyProxy.csproj",
       "msbuildProject": "../../MyProxy.csproj"
-    },
-    "MyRefs/1.0.0": {
-      "type": "project",
-      "path": "../../../MyRefs/MyRefs.csproj",
-      "msbuildProject": "../../../MyRefs/MyRefs.csproj"
     }
   },
   "projectFileDependencyGroups": {

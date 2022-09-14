@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "PzqjZ23MTuKjpd2fNu2dUUDzSDnl1byRH6xns251p4o9VNVQoh4w+fiyyBvINRLeUIlBnJaarYBVNjin66Iidg==",
+  "dgSpecHash": "XphnSG8R7+xygxzJjAVWkRi+2IsmbrIN2wdUrhW7gikn/Gcr0IzphFLoRX2HfUpE1LAkDATgbOCaTmMzO8NDfw==",
   "success": true,
   "projectFilePath": "C:\\Users\\LuisDev\\Desktop\\MyORM\\MyORM\\MyProxy\\Tests\\MyProxy.Tets\\MyProxy.Tets.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\LuisDev\\.nuget\\packages\\adr.myrefs\\1.1.0\\adr.myrefs.1.1.0.nupkg.sha512",
     "C:\\Users\\LuisDev\\.nuget\\packages\\coverlet.collector\\3.1.2\\coverlet.collector.3.1.2.nupkg.sha512",
     "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.codecoverage\\17.1.0\\microsoft.codecoverage.17.1.0.nupkg.sha512",
     "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.csharp\\4.0.1\\microsoft.csharp.4.0.1.nupkg.sha512",

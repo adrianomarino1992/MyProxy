@@ -8,19 +8,19 @@ MyProxy allow us to add proxy or turn our objects in event listeners objects.
 .NET CLI
 
 ```bash
-dotnet add package Adr.MyProxy  --version 2.0.0
+dotnet add package Adr.MyProxy  --version 2.1.0
 ```
 
 Nuget package manager
 
 ```bash
-PM> Install-Package Adr.MyProxy -Version 2.0.0
+PM> Install-Package Adr.MyProxy -Version 2.1.0
 ```
 
 packageReference
 
 ```bash
-<PackageReference Include="Adr.MyProxy " Version="2.0.0" />
+<PackageReference Include="Adr.MyProxy " Version="2.1.0" />
 ```
 
 ## Usage

@@ -1,7 +1,7 @@
-namespace MyProxy.Tets
+namespace MyProxy.Tests
 {
 
-    public class TesteForCreateObjectLikeGeneric
+    public class TestForCreateObjectLikeGeneric
     {
         [Fact]
         public void CreateACtorOfObjectLikeAConcreteObjectWithArgs()
@@ -19,7 +19,7 @@ namespace MyProxy.Tets
         public void CreateACtorOfObjectLikeAConcreteObject()
         {
             IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>();
-            m_TestObject(p); 
+            m_TestObject(p);
         }
 
         [Fact]
@@ -63,13 +63,58 @@ namespace MyProxy.Tets
 
 
         [Fact]
+        public void WhenDoWithValueReturnMethodFromCOncreteObject()
+        {
+            IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>(new Type[] { typeof(string) }, new object[] { "Adriano" });
+
+            m_TestObject(p);
+
+            p.When(nameof(p.AskAge)).Do(args => 25);
+
+            int age = p.AskAge();
+
+            Assert.Equal(25, age);
+
+        }
+
+        [Fact]
+        public void WhenDoWithlRefReturnMethodFromCOncreteObject()
+        {
+            IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>(new Type[] { typeof(string) }, new object[] { "Adriano" });
+
+            m_TestObject(p);
+
+            p.When(nameof(p.GetParents)).Do(args =>
+            {
+                IEnumerable<IPerson> list = new List<IPerson>()
+                {
+                    new Person("Person1"),
+                    new Person("Person2")
+                };
+
+                return list;
+
+            });
+
+            IEnumerable<IPerson> people = p.GetParents();
+
+            Assert.NotNull(people);
+            Assert.NotEmpty(people);
+            Assert.True(people.Count() == 2);
+            Assert.True(people.First().Name == "Person1");
+            Assert.True(people.Last().Name == "Person2");
+
+        }
+
+
+        [Fact]
         public void CallRefReturnMethodFromCOncreteObject()
         {
             IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>(new Type[] { typeof(string) }, new object[] { "Adriano" });
 
             m_TestObject(p);
 
-            IEnumerable<IPerson> people =  p.GetParents();
+            IEnumerable<IPerson> people = p.GetParents();
 
             Assert.NotNull(people);
             Assert.NotEmpty(people);

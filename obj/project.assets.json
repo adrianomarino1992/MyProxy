@@ -2,28 +2,37 @@
   "version": 3,
   "targets": {
     "net6.0": {
-      "MyRefs/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v6.0",
+      "Adr.MyRefs/1.1.0": {
+        "type": "package",
         "compile": {
-          "bin/placeholder/MyRefs.dll": {}
+          "lib/net6.0/MyRefs.dll": {}
         },
         "runtime": {
-          "bin/placeholder/MyRefs.dll": {}
+          "lib/net6.0/MyRefs.dll": {}
         }
       }
     }
   },
   "libraries": {
-    "MyRefs/1.0.0": {
-      "type": "project",
-      "path": "../MyRefs/MyRefs.csproj",
-      "msbuildProject": "../MyRefs/MyRefs.csproj"
+    "Adr.MyRefs/1.1.0": {
+      "sha512": "3qWLXA5cBs/7kfc1BK49ZmS/b5dO20pVMTYmvAV7ljBDAKaGbwhQK3VVwjcc0D0B28QjFjSyIbEExjMck9qW+w==",
+      "type": "package",
+      "path": "adr.myrefs/1.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "adr.myrefs.1.1.0.nupkg.sha512",
+        "adr.myrefs.nuspec",
+        "lib/net6.0/MyRefs.deps.json",
+        "lib/net6.0/MyRefs.dll",
+        "lib/net6.0/MyRefs.pdb"
+      ]
     }
   },
   "projectFileDependencyGroups": {
     "net6.0": [
-      "MyRefs >= 1.0.0"
+      "Adr.MyRefs >= 1.1.0"
     ]
   },
   "packageFolders": {
@@ -62,11 +71,7 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
-          "projectReferences": {
-            "C:\\Users\\LuisDev\\Desktop\\MyORM\\MyORM\\MyRefs\\MyRefs.csproj": {
-              "projectPath": "C:\\Users\\LuisDev\\Desktop\\MyORM\\MyORM\\MyRefs\\MyRefs.csproj"
-            }
-          }
+          "projectReferences": {}
         }
       },
       "warningProperties": {
@@ -78,6 +83,12 @@
     "frameworks": {
       "net6.0": {
         "targetAlias": "net6.0",
+        "dependencies": {
+          "Adr.MyRefs": {
+            "target": "Package",
+            "version": "[1.1.0, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",

@@ -53,8 +53,10 @@ namespace MyProxy.Objects
 
             if (toCopy.IsInterface)
                 interfaces = interfaces.Concat(new Type[] { toCopy }).ToArray();
+            
+            string guid = new string(Guid.NewGuid().ToString().Take(5).ToArray());
 
-            TypeBuilder tb = ProxyContainer.Container.ModuleBuilder.DefineType($"RunTimeCast_{context.Name}_{toCopy.Name}",
+            TypeBuilder tb = ProxyContainer.Container.ModuleBuilder.DefineType($"MyProxyType{guid}",
                 TypeAttributes.Class | TypeAttributes.Public, context, interfaces);
 
             SetProxy(tb);
@@ -318,9 +320,15 @@ namespace MyProxy.Objects
                         il.Emit(OpCodes.Ldloc, bfArg);
 
                         il.Emit(OpCodes.Callvirt, replaceCall);
+                                              
 
                         if (info.ReturnType == typeof(void))
                             il.Emit(OpCodes.Pop);
+                        else
+                        {
+                            if (info.ReturnType.IsValueType)
+                                il.Emit(OpCodes.Unbox_Any, info.ReturnType);
+                        }
                     }
                     else
                     {
@@ -452,7 +460,9 @@ namespace MyProxy.Objects
                     else
                     {
                         if (info.ReturnType.IsValueType)
+                        {                           
                             il.Emit(OpCodes.Unbox_Any, info.ReturnType);
+                        }
                     }
                    
 

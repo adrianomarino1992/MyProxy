@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "jVvRDsxlH6IuHo8s62mMaOcAON9vgOGZlaMVKlK52XClGRI29ERG8CcWDinA2gqNooL16cGmbcldh5XxmCUWOA==",
+  "dgSpecHash": "Cvy44NZITpxreeT6cGUlrYg9ObuJCQsiFB29u1Y2bcQItqpUP+e/UgXZR8hdg6j5/tv+0bFzQHy7lcekx6lHuw==",
   "success": true,
   "projectFilePath": "C:\\Users\\LuisDev\\Desktop\\MyORM\\MyORM\\MyProxy\\MyProxy.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\LuisDev\\.nuget\\packages\\adr.myrefs\\1.1.0\\adr.myrefs.1.1.0.nupkg.sha512"
+  ],
   "logs": []
 }

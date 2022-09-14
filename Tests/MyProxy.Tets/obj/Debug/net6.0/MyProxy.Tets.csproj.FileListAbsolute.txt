@@ -101,4 +101,3 @@ C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\Tests\MyProxy.Tets\bin\Debug\net6.0
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\Tests\MyProxy.Tets\bin\Debug\net6.0\MyProxy.dll
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\Tests\MyProxy.Tets\bin\Debug\net6.0\MyRefs.dll
 C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\Tests\MyProxy.Tets\bin\Debug\net6.0\MyProxy.pdb
-C:\Users\LuisDev\Desktop\MyORM\MyORM\MyProxy\Tests\MyProxy.Tets\bin\Debug\net6.0\MyRefs.pdb
