@@ -18,6 +18,8 @@ namespace MyProxy.Objects
         public ProxyMethodType ProxyType { get; private set; }
         public MethodInfo Method { get; private set; }
 
+        public Type[] GenericArguments {get; internal set;}
+
         public MyProxy.Objects.Delegates.WhenConditionCall? Action { get; private set; }
 
         public MethodBinder(Type type, MethodInfo method, WhenConditionCall? action, object sender, object[]? args,  ProxyMethodType proxyType)
@@ -28,6 +30,7 @@ namespace MyProxy.Objects
             Sender = sender;
             Args = args;
             ProxyType = proxyType;
+            GenericArguments = new Type[]{};
         }
 
         public DoPromisse Do(WhenConditionCall call)
@@ -126,7 +129,7 @@ namespace MyProxy.Objects
 
                 if (binder.IsAsync)
                 {
-                    var o = binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result)); 
+                    var o = binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result, binder.GenericArguments){}); 
 
                     if (o is null)
                         return Task.CompletedTask;
@@ -144,7 +147,7 @@ namespace MyProxy.Objects
 
                 }
                 else
-                    return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result));
+                    return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result, binder.GenericArguments));
 
 
             }

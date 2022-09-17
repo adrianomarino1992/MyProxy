@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "XphnSG8R7+xygxzJjAVWkRi+2IsmbrIN2wdUrhW7gikn/Gcr0IzphFLoRX2HfUpE1LAkDATgbOCaTmMzO8NDfw==",
+  "dgSpecHash": "YGCbtJAKS/RYJVzCig5O6GyR8FTT4S7zS9ahkjO/kQkDXcez3Wr+NrDCshszoA6FD8Siah+bk8uuFLD8G0FQgg==",
   "success": true,
   "projectFilePath": "C:\\Users\\LuisDev\\Desktop\\MyORM\\MyORM\\MyProxy\\Tests\\MyProxy.Tets\\MyProxy.Tets.csproj",
   "expectedPackageFiles": [
@@ -96,7 +96,10 @@
     "C:\\Users\\LuisDev\\.nuget\\packages\\xunit.core\\2.4.1\\xunit.core.2.4.1.nupkg.sha512",
     "C:\\Users\\LuisDev\\.nuget\\packages\\xunit.extensibility.core\\2.4.1\\xunit.extensibility.core.2.4.1.nupkg.sha512",
     "C:\\Users\\LuisDev\\.nuget\\packages\\xunit.extensibility.execution\\2.4.1\\xunit.extensibility.execution.2.4.1.nupkg.sha512",
-    "C:\\Users\\LuisDev\\.nuget\\packages\\xunit.runner.visualstudio\\2.4.3\\xunit.runner.visualstudio.2.4.3.nupkg.sha512"
+    "C:\\Users\\LuisDev\\.nuget\\packages\\xunit.runner.visualstudio\\2.4.3\\xunit.runner.visualstudio.2.4.3.nupkg.sha512",
+    "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.4\\microsoft.netcore.app.ref.6.0.4.nupkg.sha512",
+    "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.4\\microsoft.windowsdesktop.app.ref.6.0.4.nupkg.sha512",
+    "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.4\\microsoft.aspnetcore.app.ref.6.0.4.nupkg.sha512"
   ],
   "logs": []
 }

@@ -15,5 +15,10 @@
         public void Run() => Console.WriteLine($"{Name}, run !");
         public void Talk(string msg) => Console.WriteLine($"{Name} said: \"{msg}\"");
 
+        public T GenericMethod<T>(T obj) where T : class
+        {
+            return obj;
+        }
+
     }
 }

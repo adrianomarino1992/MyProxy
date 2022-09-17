@@ -124,6 +124,24 @@ namespace MyProxy.Tests
 
         }
 
+        [Fact]
+        public void CallGenericMethodFromCOncreteObject()
+        {
+            IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>(new Type[] { typeof(string) }, new object[] { "Adriano" });
+
+            m_TestObject(p);
+
+            Person control = new Person
+            {
+                Name = "control person"
+            };
+
+            Person result = p.GenericMethod<Person>(control);
+
+            Assert.Equal(control.Name, result.Name);
+
+        }
+
         private void m_TestObject(object p)
         {
             Assert.NotNull(p);

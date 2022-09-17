@@ -7,5 +7,7 @@
         void Run();
         int AskAge();
         IEnumerable<IPerson> GetParents();
+
+        T GenericMethod<T>(T obj) where T : class;
     }
 }

@@ -62,6 +62,7 @@ namespace MyProxy.Objects
 
                 foreach (var m in sender.GetType().GetMethods().Where(s => s.Name == @methodName))
                 {
+                    try { var _ = m.CallingConvention; } catch { continue; }
                     if (m.ReturnType.Name.Trim().ToLower().Equals(@return.ToLower().Trim()))
                     {
                         string args = String.Join(',', m.GetParameters().Select(s => s.ParameterType.Name));

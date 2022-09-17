@@ -8,19 +8,51 @@ namespace MyProxy.Extensions
 {
     public static class ProxyTypeExtensions
     {
+        public static MethodBinder WhenGenericMethod<T>(this T proxy, string name, Type[] genericArguments, params object[]? args) where T : class
+        {
+           _validateType(proxy);
 
-        public static MethodBinder When<T>(this T proxy, string name) where T : class 
+            List<MethodBinder>? binders = _ExtractBinders(proxy);
+            
+            bool needSet = binders == null;
+
+            if (needSet)
+                binders = new List<MethodBinder>();
+
+            MethodBinder? binder = binders!.FirstOrDefault(s => s.Method?.Name == name && (genericArguments == null || s.GenericArguments.All(a => genericArguments.Contains(a))));
+
+            Type t = proxy.GetType();
+
+            MethodInfo? m = t.GetMethods().FirstOrDefault(s => s.Name == name && (genericArguments == null || s.GetGenericArguments().All(a => genericArguments.Contains(a))));
+
+            if (m == null)
+            {
+                throw new MethodNotFoundException(t, name);
+            }
+
+            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, args, MethodBinder.ProxyMethodType.DO);
+            newbinder.GenericArguments = genericArguments;
+
+            binders!.Add(newbinder);
+
+            if (needSet)
+            {
+                proxy.SetPropertyValue(FieldsNames.METHODBINDERS_FIELD_NAME, binders);
+            }
+
+            return newbinder;
+        }
+
+        public static MethodBinder When<T>(this T proxy, string name) where T : class
         {
             return proxy.When(name, args: null);
         }
 
         public static MethodBinder When<T>(this T proxy, string name, params object[]? args) where T : class
         {
-            if (!proxy.GetType().GetInterfaces().Contains(typeof(IProxyType)))
-            {
-                throw new InvalidTypeException(typeof(T), $"The type {proxy.GetType().Name} must have the interface {typeof(IProxyType).Name} to works correctly");
-            }
-            List<MethodBinder>? binders = (proxy.GetFieldValue(FieldsNames.METHODBINDERS_FIELD_NAME) as List<MethodBinder>);
+            _validateType(proxy);
+
+            List<MethodBinder>? binders = _ExtractBinders(proxy);
 
             bool needSet = binders == null;
 
@@ -37,8 +69,8 @@ namespace MyProxy.Extensions
                 throw new MethodNotFoundException(t, name);
             }
 
-            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, args, MethodBinder.ProxyMethodType.REPLACE);
-                       
+            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, args, MethodBinder.ProxyMethodType.DO);
+
 
             binders!.Add(newbinder);
 
@@ -52,12 +84,10 @@ namespace MyProxy.Extensions
 
         public static MethodBinder When<T>(this T proxy, string name, MyProxy.Objects.Delegates.WhenConditionCall @do) where T : class
         {
-            if (!proxy.GetType().GetInterfaces().Contains(typeof(IProxyType)))
-            {
-                throw new InvalidTypeException(typeof(T), $"The type {proxy.GetType().Name} must have the interface {typeof(IProxyType).Name} to works correctly");
-            }
 
-            List<MethodBinder>? binders = (proxy.GetFieldValue(FieldsNames.METHODBINDERS_FIELD_NAME) as List<MethodBinder>);
+            _validateType(proxy);
+
+            List<MethodBinder>? binders = _ExtractBinders(proxy);
 
             bool needSet = binders == null;
 
@@ -74,7 +104,7 @@ namespace MyProxy.Extensions
                 throw new MethodNotFoundException(t, name);
             }
 
-            MethodBinder newbinder = new MethodBinder(t, m!, @do, proxy, null, MethodBinder.ProxyMethodType.REPLACE);
+            MethodBinder newbinder = new MethodBinder(t, m!, @do, proxy, null, MethodBinder.ProxyMethodType.DO);
 
             binders!.Add(newbinder);
 
@@ -84,6 +114,19 @@ namespace MyProxy.Extensions
             }
 
             return newbinder;
+        }
+
+        private static void _validateType(object proxy)
+        {
+            if (!proxy.GetType().GetInterfaces().Contains(typeof(IProxyType)))
+            {
+                throw new InvalidTypeException(proxy.GetType(), $"The type {proxy.GetType().Name} must have the interface {typeof(IProxyType).Name} to works correctly");
+            }
+        }
+
+        private static List<MethodBinder>? _ExtractBinders(object proxy)
+        {
+            return (proxy.GetFieldValue(FieldsNames.METHODBINDERS_FIELD_NAME) as List<MethodBinder>);
         }
 
         public static MethodsInvokedCollection GetMethodInvokeds<T>(this T proxy) where T : class

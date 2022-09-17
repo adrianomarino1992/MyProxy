@@ -250,8 +250,18 @@ namespace MyProxy.Objects
                 int numArgs = info.GetParameters().Count();
 
 
-                il.MarkLabel(beforeLabel);
+               
 
+                
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Ldfld, _beforeMethodCall);
+                MethodInfo equals = typeof(BeforeMethodCall).GetMethod("Equals")!;                
+                il.Emit(OpCodes.Call, equals!);
+                il.Emit(OpCodes.Brtrue, beforeLabel);
+
+
+                il.MarkLabel(beforeLabel);
+                
                 if (BeforeMethodCallHandler != null)
                 {
                     LocalBuilder arr = m_CreateArrayOfArgs(il, numArgs, info);
@@ -350,12 +360,16 @@ namespace MyProxy.Objects
                         {
                             var methods = context.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                             var paras = info.GetParameters().Select(s => s.ParameterType.Name).ToList();
+                            
 
                             foreach(var m in methods)
                             {
                                 if(m.Name == info.Name && (m.ReturnType.Equals(info.ReturnType) || m.ReturnType.Name.Equals(info.ReturnType.Name)))
                                 {
                                     bool match = true;
+
+                                    var generics = info.GetGenericArguments();
+
                                     var n = m.GetParameters().Select(s => s.ParameterType.Name).ToList();
                                     for(int i = 0; i < n.Count(); i++)
                                     {
@@ -368,6 +382,13 @@ namespace MyProxy.Objects
                                     if (match)
                                     {
                                         md = m;
+
+                                        if(md.IsGenericMethod && generics.Length > 0)
+                                        {
+                                            
+                                           //var genericParamBuilder = mb.DefineGenericParameters(generics.Select(s => s.Name).ToArray());                                           
+                                        }
+
                                         goto _EXITFINDLOOP;
                                     }
                                 }
@@ -484,6 +505,24 @@ namespace MyProxy.Objects
                     Type[] generics = info.GetGenericArguments();                    
                     string[] names = generics.Select(s => s.Name).ToArray();
                     GenericTypeParameterBuilder[] parametersGenerics = mb.DefineGenericParameters(names);
+
+                    for (int i = 0; i < generics.Length; i++)
+                    {
+                        var builder = parametersGenerics[i];
+
+                        builder.SetGenericParameterAttributes(generics[i].GenericParameterAttributes);
+
+                        var constraints = generics[i].GetGenericParameterConstraints();
+
+                        builder.SetInterfaceConstraints(constraints.Where(s => s.IsInterface).ToArray());
+
+                        foreach(Type btype in constraints.Where(s => !s.IsInterface))
+                        {
+                            builder.SetBaseTypeConstraint(btype);
+                        }
+
+                    }
+
                 }
 
                 foreach (var item in info.GetParameters())

@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "Cvy44NZITpxreeT6cGUlrYg9ObuJCQsiFB29u1Y2bcQItqpUP+e/UgXZR8hdg6j5/tv+0bFzQHy7lcekx6lHuw==",
+  "dgSpecHash": "CpFTMuuXZBtipzRdYMY7Jrs2yXGe8mfEZlCLuUET+RH7tFSYtOAPM/kwDt54sVnpJ3jHVaez+K8p/yt/x8wqCw==",
   "success": true,
   "projectFilePath": "C:\\Users\\LuisDev\\Desktop\\MyORM\\MyORM\\MyProxy\\MyProxy.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\LuisDev\\.nuget\\packages\\adr.myrefs\\1.1.0\\adr.myrefs.1.1.0.nupkg.sha512"
+    "C:\\Users\\LuisDev\\.nuget\\packages\\adr.myrefs\\1.1.0\\adr.myrefs.1.1.0.nupkg.sha512",
+    "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.4\\microsoft.netcore.app.ref.6.0.4.nupkg.sha512",
+    "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.4\\microsoft.windowsdesktop.app.ref.6.0.4.nupkg.sha512",
+    "C:\\Users\\LuisDev\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.4\\microsoft.aspnetcore.app.ref.6.0.4.nupkg.sha512"
   ],
   "logs": []
 }
