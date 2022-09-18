@@ -18,7 +18,7 @@ namespace MyProxy.Objects
         public ProxyMethodType ProxyType { get; private set; }
         public MethodInfo Method { get; private set; }
 
-        public Type[] GenericArguments {get; internal set;}
+        public Type[]? MethodCallArgumentsTypes {get; internal set;}
 
         public MyProxy.Objects.Delegates.WhenConditionCall? Action { get; private set; }
 
@@ -29,8 +29,7 @@ namespace MyProxy.Objects
             Action = action;
             Sender = sender;
             Args = args;
-            ProxyType = proxyType;
-            GenericArguments = new Type[]{};
+            ProxyType = proxyType;            
         }
 
         public DoPromisse Do(WhenConditionCall call)
@@ -82,11 +81,37 @@ namespace MyProxy.Objects
 
                 if (binder == null)
                 {
-                    binder = methods.FirstOrDefault(s => s.Args is null);
+                    foreach (var b in methods)
+                    {
+                        if (b != null && b.MethodCallArgumentsTypes != null && b.MethodCallArgumentsTypes.Length > 0)
+                        {
+                            if (args != null && args.Length == b.MethodCallArgumentsTypes.Length)
+                            {
+
+                                bool find = true;
+                                for (int i = 0; i < b.MethodCallArgumentsTypes.Length; i++)
+                                {
+                                    if (!b.MethodCallArgumentsTypes[i].Equals(args[i].GetType()))
+                                        find = false;
+                                }
+
+                                if (find)
+                                {
+                                    binder = b;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (binder == null)
-                    return false;               
+                {
+                    binder = methods.FirstOrDefault(s => s.Args is null && s.MethodCallArgumentsTypes is null);
+                }
+
+                if (binder == null)
+                    return false;                
 
                 return true;
             }
@@ -119,17 +144,39 @@ namespace MyProxy.Objects
                 MethodBinder? binder = methods.Where(s => s.Args != null)
                     .Where(s => s.Args!.All(a => args.Args.Any(p => p.Equals(a)))).FirstOrDefault();
 
-                if(binder == null)
+                if (binder == null)
                 {
-                    binder = methods.FirstOrDefault(s => s.Args is null);
+                    foreach (var b in methods)
+                    {
+                        if (b != null && b.MethodCallArgumentsTypes != null && b.MethodCallArgumentsTypes.Length > 0)
+                        {
+                            if (args != null && args.Args.Length == b.MethodCallArgumentsTypes.Length)
+                            {
+
+
+                                for (int i = 0; i < b.MethodCallArgumentsTypes.Length; i++)
+                                {
+                                    if (!b.MethodCallArgumentsTypes[i].Equals(args.Args[i].GetType()))
+                                        continue;
+                                }
+
+                                binder = b;
+                            }
+                        }
+                    }
                 }
 
                 if (binder == null)
-                    return args.Result;
-
-                if (binder.IsAsync)
                 {
-                    var o = binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result, binder.GenericArguments){}); 
+                    binder = methods.FirstOrDefault(s => s.Args is null && s.MethodCallArgumentsTypes is null);
+                }
+
+                if (binder == null)
+                    return args.Result;                
+
+                if (binder!.IsAsync)
+                {
+                    var o = binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result, binder.MethodCallArgumentsTypes){}); 
 
                     if (o is null)
                         return Task.CompletedTask;
@@ -147,7 +194,7 @@ namespace MyProxy.Objects
 
                 }
                 else
-                    return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result, binder.GenericArguments));
+                    return binder!.Action!.Invoke(new WhenConditionCallArgs(args.Sender, args.Name, args.Args, args.Result, binder.MethodCallArgumentsTypes));
 
 
             }

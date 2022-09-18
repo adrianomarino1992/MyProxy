@@ -125,7 +125,7 @@ namespace MyProxy.Tests
         }
 
         [Fact]
-        public void CallGenericMethodFromCOncreteObject()
+        public void CallGenericMethodFromConcreteObject()
         {
             IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>(new Type[] { typeof(string) }, new object[] { "Adriano" });
 
@@ -139,6 +139,38 @@ namespace MyProxy.Tests
             Person result = p.GenericMethod<Person>(control);
 
             Assert.Equal(control.Name, result.Name);
+
+        }
+
+        [Fact]
+        public void CallGenericMethodFromConcreteObjectWithinWhenDOEvents()
+        {
+            IPerson p = global::MyProxy.DynamicExtensions.CreateObjectLike<Person>(new Type[] { typeof(string) }, new object[] { "Adriano" });
+
+            m_TestObject(p);
+
+            Person control = new Person
+            {
+                Name = "control person"
+            };
+
+            object boxInt = 0;
+
+            p.WhenCallMethodWithThisParamtersType(nameof(p.GenericMethod), new Type[] { typeof(Person) }).Do(args => {
+
+                boxInt = ((int)boxInt) + 1;
+
+                return control;                
+
+            });
+
+            Person result = p.GenericMethod<Person>(control);
+
+            string resultStr = p.GenericMethod<string>("Hello");
+
+            Assert.Equal(control.Name, result.Name);
+            Assert.Equal(1, (int)boxInt);
+            Assert.Equal("Hello", resultStr);
 
         }
 

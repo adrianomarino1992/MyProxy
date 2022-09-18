@@ -46,8 +46,16 @@ namespace MyProxy.Objects.Delegates
                         {
                             if (mt.IsGenericMethod && mt.GetGenericArguments().Length == GenericArguments.Count())
                             {
+                                Method = mt.MakeGenericMethod(GenericArguments);
+                            }
+                            else
+                            {
                                 Method = mt;
                             }
+                        }
+                        else
+                        {
+                            Method = mt;
                         }
                     }
                 }

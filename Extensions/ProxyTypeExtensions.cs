@@ -8,7 +8,7 @@ namespace MyProxy.Extensions
 {
     public static class ProxyTypeExtensions
     {
-        public static MethodBinder WhenGenericMethod<T>(this T proxy, string name, Type[] genericArguments, params object[]? args) where T : class
+        public static MethodBinder WhenCallMethodWithThisParamtersType<T>(this T proxy, string name, Type[] genericArguments) where T : class
         {
            _validateType(proxy);
 
@@ -19,19 +19,19 @@ namespace MyProxy.Extensions
             if (needSet)
                 binders = new List<MethodBinder>();
 
-            MethodBinder? binder = binders!.FirstOrDefault(s => s.Method?.Name == name && (genericArguments == null || s.GenericArguments.All(a => genericArguments.Contains(a))));
+            MethodBinder? binder = binders!.FirstOrDefault(s => s.Method?.Name == name && (genericArguments == null || s.MethodCallArgumentsTypes.All(a => genericArguments.Contains(a))));
 
             Type t = proxy.GetType();
 
-            MethodInfo? m = t.GetMethods().FirstOrDefault(s => s.Name == name && (genericArguments == null || s.GetGenericArguments().All(a => genericArguments.Contains(a))));
+            MethodInfo? m = t.GetMethods().FirstOrDefault(s => s.Name == name && (genericArguments == null || s.GetGenericArguments().Count() ==genericArguments.Count()));
 
             if (m == null)
             {
                 throw new MethodNotFoundException(t, name);
             }
 
-            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, args, MethodBinder.ProxyMethodType.DO);
-            newbinder.GenericArguments = genericArguments;
+            MethodBinder newbinder = new MethodBinder(t, m!, null, proxy, null, MethodBinder.ProxyMethodType.DO);
+            newbinder.MethodCallArgumentsTypes = genericArguments;
 
             binders!.Add(newbinder);
 
@@ -45,10 +45,10 @@ namespace MyProxy.Extensions
 
         public static MethodBinder When<T>(this T proxy, string name) where T : class
         {
-            return proxy.When(name, args: null);
+            return proxy.WhenCallMethodWithThisArguments(name, args: null);
         }
 
-        public static MethodBinder When<T>(this T proxy, string name, params object[]? args) where T : class
+        public static MethodBinder WhenCallMethodWithThisArguments<T>(this T proxy, string name, params object[]? args) where T : class
         {
             _validateType(proxy);
 
